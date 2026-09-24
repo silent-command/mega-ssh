@@ -17,7 +17,7 @@
 #include "transport.h"
 #include "channel.h"
 
-#define SSHC_VERSION "0.4.4"
+#define SSHC_VERSION "0.4.5"
 
 static char host[64];
 static char port_s[6];
@@ -345,17 +345,20 @@ int main(void)
           if (k >= 0xc1 && k <= 0xda) k = (unsigned char)(k & 0x7f);   /* MEGA+letter arrives as the capital with bit 7 set (5.29) */
           if (k == 'm' || k == 'M') { toggle_mark(); continue; }
           if (k == 'f' || k == 'F' || k == 'b' || k == 'B') {
+            /* Cycle through the screen module, never a local copy: it is
+             * the one authority on these colours, and the terminal is
+             * seeded from it by ck_term_init on every connect. Keeping a
+             * private loc_bg here let the two drift -- a MEGA+B in a
+             * session moved the registers but not the module, so the
+             * next connect stamped the module's stale background back
+             * over the user's choice while the border kept the new one
+             * (5.32). Neither cycle touches colour RAM, so the
+             * terminal's own per-cell colours survive the call. */
             ck_term_cursor(0);
-            if (k == 'f' || k == 'F') {
-              loc_fg = (unsigned char)((loc_fg + 1) & 0x0f);
-              if (loc_fg == loc_bg) loc_fg = (unsigned char)((loc_fg + 1) & 0x0f);
-            } else {
-              { static unsigned char pressed;     /* the first press: black, unless it is already; then the rotation (the four clients agree) */
-                if (!pressed && loc_bg != 0) loc_bg = 0;
-                else loc_bg = (unsigned char)((loc_bg + 1) & 0x0f);
-                pressed = 1; }
-              if (loc_bg == loc_fg) loc_bg = (unsigned char)((loc_bg + 1) & 0x0f);
-            }
+            if (k == 'f' || k == 'F') m65_screen_cycle_text_colour();
+            else m65_screen_cycle_background();
+            loc_fg = m65_screen_text_colour();
+            loc_bg = m65_screen_bg_colour();
             ck_term_recolour(loc_fg, loc_bg);
             ck_term_cursor(1);
             continue;
