@@ -17,7 +17,7 @@
 #include "transport.h"
 #include "channel.h"
 
-#define SSHC_VERSION "0.4.5"
+#define SSHC_VERSION "0.4.6"
 
 static char host[64];
 static char port_s[6];
@@ -84,6 +84,25 @@ static uint16_t map_key(uint8_t k, uint8_t mods)
     uint8_t n = (uint8_t)(k - KEY_F1);
     if (n < 4) { seq[0] = 27; seq[1] = 'O'; seq[2] = (uint8_t)('P' + n); return 3; }   /* F1-F4 as PF1-PF4 */
     return tilde_key(fkey[n]);
+  }
+  /* The symbols a C64 keyboard never had, on the keys the MEGA65 gives
+   * them. The pound key reports Latin-1 $A3 and the up-arrow key $AF;
+   * with any modifier held they report nothing at all to a running
+   * program, so their other symbols live on MEGA with keys that do
+   * report: MEGA with : and ; give { and } as SHIFT gives [ and ];
+   * MEGA with / reports a backslash and stands for |; MEGA with the
+   * left-arrow reports a backtick and stands for ~, SHIFT there being
+   * the backtick itself, as on a PC. Before this all five were dropped
+   * with everything else at or above $80, which a hidden password
+   * prompt hides completely (5.33). Measured at the client, not with
+   * the halted-CPU probe, which misreports modifier chords. */
+  if (k == 0xa3) { seq[0] = '\\'; return 1; }
+  if (k == 0xaf) { seq[0] = '^'; return 1; }
+  if (mods & MOD_MEGA) {
+    if (k == ':') { seq[0] = '{'; return 1; }
+    if (k == ';') { seq[0] = '}'; return 1; }
+    if (k == '\\') { seq[0] = '|'; return 1; }
+    if (k == '`') { seq[0] = '~'; return 1; }
   }
   if (k < 0x80) { seq[0] = k; return 1; }         /* TAB, ESC, RUN/STOP as ^C, and the printable keys */
   return 0;
