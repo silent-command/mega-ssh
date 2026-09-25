@@ -11,7 +11,7 @@
 #define CK_BASE 0x12000UL             /* where the image is loaded */
 #define CK_TERM_BASE 0x1E000UL        /* the terminal, the top of the same bank */
 
-/* Loads CRYPTO and TERM from the boot disk into bank 1, puts the
+/* Loads SSHCRYPTO and TERM from the boot disk into bank 1, puts the
  * trampoline at $1700 and runs INIT. 0 with a message on failure. */
 unsigned char ck_boot(const char **err);
 extern unsigned char ck_boot_tries;    /* loads attempted: 2 when both files came first time */

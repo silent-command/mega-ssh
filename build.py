@@ -256,12 +256,12 @@ def build_client():
     shutil.copy(image, BIN / "meganet")
     if d81.exists():
         d81.unlink()
-    shutil.copy(cimage, BIN / "crypto")
+    shutil.copy(cimage, BIN / "sshcrypto")
     shutil.copy(cterm, BIN / "term")
     empty = BUILD / "empty.seq"                     # an empty IDENTITY ships on the disk: the first generation
     empty.write_bytes(b"")                          # on a disk without one did not create the file (5.26)
     run([c1541, "-format", "ssh,ss", "d81", d81, "-write", prg, "ssh", "-write", BIN / "meganet", "meganet",
-         "-write", BIN / "crypto", "crypto", "-write", BIN / "term", "term",
+         "-write", BIN / "sshcrypto", "sshcrypto", "-write", BIN / "term", "term",   # SSHCRYPTO, not CRYPTO: the IRC client's bank shares a disk with it on net-tools.d81
          "-write", empty, "identity,s"], stdout=subprocess.DEVNULL)
     run([c1541, "-attach", d81, "-dir"])
     return 0

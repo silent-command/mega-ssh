@@ -17,7 +17,7 @@
 #include "transport.h"
 #include "channel.h"
 
-#define SSHC_VERSION "0.4.6"
+#define SSHC_VERSION "0.4.7"
 
 static char host[64];
 static char port_s[6];

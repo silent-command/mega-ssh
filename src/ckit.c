@@ -56,7 +56,7 @@ unsigned char ck_boot(const char **err)
   lcopy((long)ck_tramp_bin, (long)CK_TR, CK_TRAMP_SIZE);
   TR(0x0D) = 0x00;                                /* the caller's MAPHI Z: no KERNAL, m65_own_vectors() */
   ck_boot_tries = 0;
-  if (!load_retry("CRYPTO", CK_BASE, CK_BIN_SIZE)) { *err = "CRYPTO not found on the boot disk (or wrong size)"; return 0; }
+  if (!load_retry("SSHCRYPTO", CK_BASE, CK_BIN_SIZE)) { *err = "SSHCRYPTO not found on the boot disk (or wrong size)"; return 0; }
   if (lpeek(CK_BASE) != 0x4c) { *err = "the crypto image did not land"; return 0; }
   if (!load_retry("TERM", CK_TERM_BASE, CK_TERM_SIZE)) { *err = "TERM not found on the boot disk (or wrong size)"; return 0; }
   call(E_INIT, 0, 0, 0);
