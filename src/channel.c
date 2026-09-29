@@ -14,13 +14,15 @@ static uint32_t local_window;         /* bytes the server may still send */
 static uint32_t remote_maxpkt;
 static unsigned char opened, eof_sent;
 #define msg ssh_rx                    /* messages are built in the receive buffer, idle by then (5.27) */
+/* SSH_RX_MAX, never sizeof: on the machine ssh_rx is a fixed address, and
+ * sizeof a pointer is 2, which cut every message to nothing (5.35) */
 
 #define LOCAL_ID 0
 
 static unsigned char request(const char *what, unsigned char want_reply, const uint8_t *extra, uint16_t n)
 {
   wbuf b;
-  wb_init(&b, msg, sizeof msg);
+  wb_init(&b, msg, SSH_RX_MAX);
   wb_byte(&b, SSH_MSG_CHANNEL_REQUEST); wb_u32(&b, remote_id);
   wb_cstring(&b, what); wb_byte(&b, want_reply);
   if (n) wb_bytes(&b, extra, n);
@@ -54,7 +56,7 @@ unsigned char ch_open_shell(void)
   wbuf pb;
   ch_closed = 0; eof_sent = 0; opened = 0; ch_exit_status = -1;
   ssh_status ? ssh_status("opening a session") : (void)0;
-  wb_init(&b, msg, sizeof msg);
+  wb_init(&b, msg, SSH_RX_MAX);
   wb_byte(&b, SSH_MSG_CHANNEL_OPEN); wb_cstring(&b, "session");
   wb_u32(&b, LOCAL_ID); wb_u32(&b, CH_LOCAL_WINDOW); wb_u32(&b, CH_LOCAL_MAXPKT);
   if (!ssh_send(msg, b.len)) return 0;
@@ -103,7 +105,7 @@ unsigned char ch_send(const uint8_t *p, uint16_t n)
     if (take > remote_window) take = (uint16_t)remote_window;
     if (take > remote_maxpkt) take = (uint16_t)remote_maxpkt;
     if (take > SSH_TX_MAX - 16) take = SSH_TX_MAX - 16;
-    wb_init(&b, msg, sizeof msg);
+    wb_init(&b, msg, SSH_RX_MAX);
     wb_byte(&b, SSH_MSG_CHANNEL_DATA); wb_u32(&b, remote_id); wb_string(&b, p, take);
     if (!ssh_send(msg, b.len)) return 0;
     remote_window -= take; p += take; n = (uint16_t)(n - take);
@@ -117,7 +119,7 @@ static unsigned char adjust(void)
   wbuf b;
   uint32_t give = CH_LOCAL_WINDOW - local_window;
   if (give < CH_LOCAL_WINDOW / 2) return 1;
-  wb_init(&b, msg, sizeof msg);
+  wb_init(&b, msg, SSH_RX_MAX);
   wb_byte(&b, SSH_MSG_CHANNEL_WINDOW_ADJUST); wb_u32(&b, remote_id); wb_u32(&b, give);
   if (!ssh_send(msg, b.len)) return 0;
   local_window += give;
@@ -150,7 +152,7 @@ unsigned char ch_dispatch(void)
   case SSH_MSG_CHANNEL_CLOSE: {
     wbuf b;
     if (!ch_closed) {
-      wb_init(&b, msg, sizeof msg);
+      wb_init(&b, msg, SSH_RX_MAX);
       wb_byte(&b, SSH_MSG_CHANNEL_CLOSE); wb_u32(&b, remote_id);
       ssh_send(msg, b.len);
     }
@@ -165,7 +167,7 @@ unsigned char ch_dispatch(void)
     if (what && wn == 11 && !memcmp(what, "exit-status", 11)) ch_exit_status = (int)rb_u32(&r);
     if (want) {
       wbuf b;
-      wb_init(&b, msg, sizeof msg);
+      wb_init(&b, msg, SSH_RX_MAX);
       wb_byte(&b, SSH_MSG_CHANNEL_FAILURE); wb_u32(&b, remote_id);
       if (!ssh_send(msg, b.len)) return 0;
     }
@@ -175,7 +177,7 @@ unsigned char ch_dispatch(void)
     wbuf b;
     uint32_t their = 0;
     rb_string(&r, &n); their = rb_u32(&r);
-    wb_init(&b, msg, sizeof msg);
+    wb_init(&b, msg, SSH_RX_MAX);
     wb_byte(&b, SSH_MSG_CHANNEL_OPEN_FAILURE); wb_u32(&b, their); wb_u32(&b, 1);
     wb_cstring(&b, "no"); wb_cstring(&b, "");
     return ssh_send(msg, b.len);
@@ -198,12 +200,12 @@ void ch_close(void)
   wbuf b;
   if (!opened || ch_closed) return;
   if (!eof_sent) {
-    wb_init(&b, msg, sizeof msg);
+    wb_init(&b, msg, SSH_RX_MAX);
     wb_byte(&b, SSH_MSG_CHANNEL_EOF); wb_u32(&b, remote_id);
     ssh_send(msg, b.len);
     eof_sent = 1;
   }
-  wb_init(&b, msg, sizeof msg);
+  wb_init(&b, msg, SSH_RX_MAX);
   wb_byte(&b, SSH_MSG_CHANNEL_CLOSE); wb_u32(&b, remote_id);
   ssh_send(msg, b.len);
   ch_closed = 1;

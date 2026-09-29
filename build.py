@@ -66,6 +66,22 @@ def check_rmw(elf):
         die(f"{elf.name}: the loop miscompile of 5.6 is back; rewrite the loop it names")
 
 
+def check_headroom(mapfile):
+    """The soft stack grows down from $D000 into whatever the data left;
+    the family's floor is 1 KB (gemini 5.6, mega-irc 5.16). This client
+    had 285 bytes and no check until 5.35."""
+    import re
+    end = 0
+    for line in mapfile.read_text().splitlines():
+        m = re.match(r"\s*([0-9a-f]+)\s+[0-9a-f]+\s+([0-9a-f]+)\s+\d+\s+\.(bss|noinit|data)$", line)
+        if m:
+            end = max(end, int(m.group(1), 16) + int(m.group(2), 16))
+    room = 0xD000 - end
+    print(f"  data ends at ${end:04x}: {room} bytes for the soft stack")
+    if room < 1024:
+        die("less than 1 KB between the program's data and $D000: the boot will crash (gemini 5.6); find the bytes")
+
+
 def mos_clang():
     roots = [os.environ["LLVM_MOS_DIR"]] if os.environ.get("LLVM_MOS_DIR") else []
     roots += [Path.home() / "llvm-mos", "/opt/llvm-mos", "/usr/local/llvm-mos"]
@@ -111,7 +127,10 @@ def cflags(libc_src):
     return ["-Oz", "-I", str(libc_src / "include"), "-I", str(MEGANET / "src" / "abi"),
             "-I", str(MEGANET / "build" / "gen"), "-I", str(ROOT / "src" / "platform"),
             "-I", str(ROOT / "src" / "crypto"), "-I", str(ROOT / "src"),
-            "-Wall", "-Wextra", "-Werror", "-Wno-unused-parameter"] + extra
+            "-Wall", "-Wextra", "-Werror", "-Wno-unused-parameter",
+            # the disk layer's two buffers in low RAM the ROM's reset rebuilds on
+            # exit, as the IRC client does (m65_exit.c leaves through that reset; 5.35)
+            "-DF011_BUF_AT=0x1100", "-DBAM2_AT=0x1300"] + extra
 
 
 def platform_sources():
@@ -251,6 +270,7 @@ def build_client():
          f"-Wl,-Map={BIN / 'ssh.map'}", "-o", str(prg)])
     print(f"  {prg.name}: {prg.stat().st_size} bytes")
     check_rmw(prg.with_suffix(".prg.elf"))
+    check_headroom(BIN / "ssh.map")
     c1541 = find_tool("c1541", env="C1541")
     d81 = BIN / "SSH.D81"
     shutil.copy(image, BIN / "meganet")

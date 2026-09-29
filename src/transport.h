@@ -65,8 +65,17 @@ extern unsigned char ssh_error;
 extern char ssh_reason[80];           /* the server's words, when it gave any */
 const char *ssh_error_text(void);
 
-/* The last received message: type and payload (after the type byte). */
+/* The last received message: type and payload (after the type byte).
+ * On the machine it is the ROM's old screen page, $0800-$0FFF: the
+ * screen is at $10000 (m65_screen.c), the KERNAL is mapped out with its
+ * interrupts (m65_own_vectors), and nothing else here touches the page.
+ * In .bss it left 285 bytes between the data and the stack, below the
+ * family's 1 KB floor (5.35); the IRC client keeps its buffers there too. */
+#ifdef __mos__
+#define ssh_rx ((uint8_t *)0x0800)
+#else
 extern uint8_t ssh_rx[SSH_RX_MAX];
+#endif
 extern uint16_t ssh_rx_len;           /* payload length including the type byte */
 #define ssh_rx_type (ssh_rx[0])
 
