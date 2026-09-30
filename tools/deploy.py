@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Puts bin/SSH.D81 into net-tools on the MEGA65's SD card, keeping what the client
+"""Puts bin/SSH.D81 onto the MEGA65's SD card root, keeping what the client
 wrote on the disk already there: IDENTITY (the Ed25519 key that is the
 user's account on a key-authenticated server), SSHAUTH (the
 authentication default), KNOWNHOSTS and SSHMARKS (the bookmarks). Replacing the disk image outright loses all three
@@ -47,7 +47,7 @@ def main():
         old, new = td / "old.d81", td / "SSH.D81"
         shutil.copy(image, new)
         run([m65, "-F"], check=False); time.sleep(2)                  # reset: mega65_ftp refuses a running program
-        r = run([ftp, "-l", port, "-c", "cd net-tools", "-c", f"get SSH.D81 {old}"], check=False)
+        r = run([ftp, "-l", port, "-c", f"get SSH.D81 {old}"], check=False)
         kept, absent = [], []
         if old.exists() and old.stat().st_size == 819200:
             # A dated copy of what the card held, under build/deploy: the
@@ -72,9 +72,9 @@ def main():
         else:
             print("no SSH.D81 on the card yet, nothing to keep")
         run([m65, "-F"], check=False); time.sleep(2)   # reset again: a second card session straight after the first stalled twice (2026-09-29)
-        run([ftp, "-l", port, "-c", "cd net-tools", "-c", "del SSH.D81"], check=False)   # its own session: a del and a put in one stalled the card (2026-09-29)
+        run([ftp, "-l", port, "-c", "del SSH.D81"], check=False)   # its own session: a del and a put in one stalled the card (2026-09-29)
         run([m65, "-F"], check=False); time.sleep(2)
-        r = run([ftp, "-l", port, "-c", "cd net-tools", "-c", f"put {new} SSH.D81"], check=False)
+        r = run([ftp, "-l", port, "-c", f"put {new} SSH.D81"], check=False)
         if "in " not in r.stdout and "bytes" not in r.stdout:
             sys.exit(f"the upload did not report success:\n{r.stdout}{r.stderr}")
         print("deployed", image.name, "keeping", ", ".join(kept) if kept else "nothing")
