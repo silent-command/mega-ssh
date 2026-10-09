@@ -862,6 +862,16 @@ meant to. Verified: the release image copied plainly to the card, the
 host screen drawn with the right glyphs, the font bytes read back as
 the ROM's. Version 0.4.2; gopher 0.4.2; FTP 0.4.3.
 
+### 5.37 mega-net 0.4 fixes the stall; the buffer returns to $0800 (2026-10-09)
+
+5.36's stall was found in mega-net: the crash came at the end of the
+first transmit, and the driver now waits for the controller's
+transmit-done flag before it returns (mega-net REQUIREMENTS.md 5.19).
+The 0.4.8 client, unchanged but for that image, started thirty boots
+out of thirty, where it had failed four in ten. So the receive buffer
+goes back to `$0800`, and the room goes back from 1,084 bytes to 3,190.
+Version 0.4.10.
+
 ### 5.36 The receive buffer goes back into .bss (2026-10-09)
 
 Reported: in 80x50 the client stopped at "starting the network...",

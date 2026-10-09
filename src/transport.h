@@ -66,10 +66,17 @@ extern char ssh_reason[80];           /* the server's words, when it gave any */
 const char *ssh_error_text(void);
 
 /* The last received message: type and payload (after the type byte).
- * In .bss. 0.4.8 put it at $0800, the ROM's old screen page, and the
- * client then stopped at "starting the network..." on a third of all
- * boots; back here, none in twenty (5.36). */
+ * On the machine it is the ROM's old screen page, $0800-$0FFF: the
+ * screen is at $10000 (m65_screen.c), the KERNAL is mapped out with its
+ * interrupts (m65_own_vectors), and nothing else here touches the page.
+ * In .bss it left too little room for the stack (5.35). 0.4.9 put it back
+ * there while a start-up crash in mega-net was chased; mega-net 0.4 fixed
+ * the crash, and it is here again (5.36, 5.37). */
+#ifdef __mos__
+#define ssh_rx ((uint8_t *)0x0800)
+#else
 extern uint8_t ssh_rx[SSH_RX_MAX];
+#endif
 extern uint16_t ssh_rx_len;           /* payload length including the type byte */
 #define ssh_rx_type (ssh_rx[0])
 
