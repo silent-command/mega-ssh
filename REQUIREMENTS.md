@@ -862,6 +862,18 @@ meant to. Verified: the release image copied plainly to the card, the
 host screen drawn with the right glyphs, the font bytes read back as
 the ROM's. Version 0.4.2; gopher 0.4.2; FTP 0.4.3.
 
+### 5.38 The stall's real cause, fixed in mega-net 0.5 (2026-10-09)
+
+5.37's mega-net 0.4 waited for transmit-done, which hid the crash
+without removing it. The cause was mega-net's INIT writing back what it
+read from `$D6E1`, which turned on the Ethernet controller's CPU
+activity log. While the log is on, the controller pauses the CPU during
+a transmit and drops the memory write in flight, so return addresses
+went missing in the first transmit after INIT (mega-net REQUIREMENTS.md
+5.20). 0.5 stores zero there and drops 0.4's wait. This client in
+0.4.8's layout, with that image and no wait, started twenty boots out of
+twenty. Version 0.4.11.
+
 ### 5.37 mega-net 0.4 fixes the stall; the buffer returns to $0800 (2026-10-09)
 
 5.36's stall was found in mega-net: the crash came at the end of the

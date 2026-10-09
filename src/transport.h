@@ -70,8 +70,8 @@ const char *ssh_error_text(void);
  * screen is at $10000 (m65_screen.c), the KERNAL is mapped out with its
  * interrupts (m65_own_vectors), and nothing else here touches the page.
  * In .bss it left too little room for the stack (5.35). 0.4.9 put it back
- * there while a start-up crash in mega-net was chased; mega-net 0.4 fixed
- * the crash, and it is here again (5.36, 5.37). */
+ * there while a start-up crash in mega-net was chased; mega-net fixed
+ * the crash, and it is here again (5.36-5.38). */
 #ifdef __mos__
 #define ssh_rx ((uint8_t *)0x0800)
 #else
