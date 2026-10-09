@@ -9,9 +9,7 @@
 
 unsigned char ssh_error;
 char ssh_reason[80];
-#ifndef __mos__
-uint8_t ssh_rx[SSH_RX_MAX];          /* on the machine: $0800 (transport.h, 5.35) */
-#endif
+uint8_t ssh_rx[SSH_RX_MAX];
 uint16_t ssh_rx_len;
 void (*ssh_status)(const char *what);
 unsigned char (*ssh_ask_hostkey)(const uint8_t key[32], unsigned char changed);

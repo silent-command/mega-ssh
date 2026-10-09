@@ -862,6 +862,46 @@ meant to. Verified: the release image copied plainly to the card, the
 host screen drawn with the right glyphs, the font bytes read back as
 the ROM's. Version 0.4.2; gopher 0.4.2; FTP 0.4.3.
 
+### 5.36 The receive buffer goes back into .bss (2026-10-09)
+
+Reported: in 80x50 the client stopped at "starting the network...",
+sometimes with "@@@@" at the top right. It was not the mode. 0.4.8
+stopped on four boots of eight in 80x25 too, and 0.4.7 on none of
+eight. Built and booted ten times each, in one mode or both:
+
+| build | stuck |
+|---|---|
+| 0.4.8 | 4 of 8 (80x25) |
+| 0.4.8, `$0800` cleared at start | 4 of 10 |
+| `ssh_rx` at `$0800`, disk buffers back in .bss | 3 of 8 |
+| 0.4.8, the free RAM above the data zeroed at start | 2 of 10 (80x50) |
+| `ssh_rx` in .bss, disk buffers at `$1100`/`$1300` | 0 of 10 (80x25), 0 of 10 (80x50) |
+
+So the contents of `$0800` do not matter and neither does stale RAM
+above the data; what changes the rate is where the client's code and
+data sit. A stuck machine had made one mega-net call after INIT,
+DHCP_START (the mailbox at `$1600` read `$201E`). The CPU stack held
+the whole chain, main through the trampoline into the entry,
+`transmit`, `mn_net_send_udp`, `mn_net_tx_send` and `send`, plus an
+interrupt frame taken at `$6867`, the instruction after the driver's
+transmit returned. The CPU was then looping through BRKs in zero page
+with bank 4 mapped. That matches mega-net's 5.16/5.18: the
+controller's transmit-done event reaches the IRQ vector past the I
+flag, tens of microseconds after a transmit. 5.18 made it rare. This
+layout makes it common again. Which instruction the event lands on is
+the likely difference. It is not pinned down. mega-net's counter
+cannot tell the event from the loop's own BRKs.
+
+The fix is the layout that works: `ssh_rx` back in .bss (`transport.c`
+and `transport.h`), the disk layer's buffers still at `$1100`/`$1300`.
+Room is 1,084 bytes, above the 1 KB floor, against 3,190 in 0.4.8. The
+"@@@@" was the crashed CPU writing where it should not. Version 0.4.9.
+
+**Carried.** The event itself: mega-net 5.18's idea of waiting for
+transmit-done inside the call that transmitted, so the event lands
+while the window stub is in force, and making boots independent of the
+client's layout.
+
 ### 5.35 285 bytes of stack: the receive buffer to $0800 (2026-09-29)
 
 Measured from the map while planning SFTP: the data ended at $CEE3,
