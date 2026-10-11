@@ -7,7 +7,7 @@ on first use, a VT100 with color in 25 or 50 rows. C99 for llvm-mos,
 `-Oz`, the inner loops in assembly on the math unit. Version in
 `src/sshc.c` (`SSHC_VERSION`) and `src/transport.c` (`VERSION_STRING`).
 0BSD. Releases carry `bin/SSH.D81`, which must never contain
-`IDENTITY`, `SSHAUTH`, `KNOWNHOSTS` or `SSHMARKS` (the build does not put them there; do not add them).
+`IDENTITY`, `SSHAUTH`, `SSHUSER`, `KNOWNHOSTS` or `SSHMARKS` (the build does not put them there; do not add them).
 
 ## Read first
 
@@ -25,7 +25,7 @@ on first use, a VT100 with color in 25 or 50 rows. C99 for llvm-mos,
 ```
 python3 build.py test     the crypto suite (RFC vectors) and the terminal suite; the gate for any change
 python3 build.py          the client, the crypto bank (CRYPTO, TERM) and bin/SSH.D81; refuses on the 5.6 miscompile shape
-python3 tools/deploy.py   SSH.D81 onto the card, carrying IDENTITY, SSHAUTH and KNOWNHOSTS over; the only way to redeploy
+python3 tools/deploy.py   SSH.D81 onto the card, carrying IDENTITY, SSHAUTH, SSHUSER, KNOWNHOSTS and SSHMARKS over; the only way to redeploy
 python3 tools/sizes.py    code and data per file, client and bank
 TERM_TRACE=1 python3 build.py     a 64-byte ring of what the terminal parser received, read from the monitor (5.21)
 build/venv/bin/python tools/ssh_test_server.py 2222            the echo shell, password mega65/mega65

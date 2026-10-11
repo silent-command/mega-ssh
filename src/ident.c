@@ -7,10 +7,12 @@
 
 #define IDENT_FILE "IDENTITY"
 #define AUTH_FILE "SSHAUTH"
+#define USER_FILE "SSHUSER"
 
 uint8_t ident_seed[32], ident_pk[32];
 unsigned char ident_present;
 char ident_auth = 'p';
+static char ident_user[32];            /* the name SSHUSER holds, to write only on a change */
 static unsigned char ident_drive;
 static uint8_t buf64[64];              /* the file's bytes, in and out */
 
@@ -59,9 +61,10 @@ void ident_fingerprint_b64(char *out)
   b64(out, fp, 32);
 }
 
-void ident_load(unsigned char drive)
+void ident_load(unsigned char drive, char *user)
 {
   uint8_t *buf = buf64;
+  unsigned char n;
   ident_drive = drive;
   ident_present = 0;
   if (cbmdos_load(IDENT_FILE, drive, (unsigned long)(unsigned int)buf, 64) == 64) {
@@ -71,6 +74,9 @@ void ident_load(unsigned char drive)
   }
   if (cbmdos_load(AUTH_FILE, drive, (unsigned long)(unsigned int)buf, 1) == 1 && (buf[0] == 'i' || buf[0] == 'p'))
     ident_auth = (char)buf[0];
+  n = (unsigned char)cbmdos_load(USER_FILE, drive, (unsigned long)(unsigned int)ident_user, 31);
+  ident_user[n] = 0;                                 /* 0 bytes when absent or longer than a name */
+  strcpy(user, ident_user);
 }
 
 static unsigned char write_file(const char *name, const uint8_t *p, unsigned char n)
@@ -99,4 +105,11 @@ unsigned char ident_set_auth(char method)
   uint8_t b = (uint8_t)method;
   ident_auth = method;
   return write_file(AUTH_FILE, &b, 1);
+}
+
+unsigned char ident_set_user(const char *user)
+{
+  if (!strcmp(user, ident_user)) return 1;
+  strcpy(ident_user, user);
+  return write_file(USER_FILE, (const uint8_t *)user, (unsigned char)strlen(user));
 }

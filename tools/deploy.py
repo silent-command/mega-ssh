@@ -2,7 +2,7 @@
 """Puts bin/SSH.D81 onto the MEGA65's SD card root, keeping what the client
 wrote on the disk already there: IDENTITY (the Ed25519 key that is the
 user's account on a key-authenticated server), SSHAUTH (the
-authentication default), KNOWNHOSTS and SSHMARKS (the bookmarks). Replacing the disk image outright loses all three
+authentication default), SSHUSER (the last user name), KNOWNHOSTS and SSHMARKS (the bookmarks). Replacing the disk image outright loses them all
 (REQUIREMENTS.md 5.22).
 
     python3 tools/deploy.py [--port /dev/cu.usbserial-23201] [image.d81]
@@ -14,7 +14,7 @@ import os, shutil, subprocess, sys, tempfile, time
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-KEEP = ["identity", "sshauth", "knownhosts", "sshmarks"]          # c1541 wants lowercase; the client writes them upper-cased
+KEEP = ["identity", "sshauth", "sshuser", "knownhosts", "sshmarks"]          # c1541 wants lowercase; the client writes them upper-cased
 
 def tool(name):
     for cand in (name, name + ".osx"):
