@@ -247,21 +247,28 @@ static unsigned char type_key(void)
          ch_send((const uint8_t *)" mega65", 7);
 }
 
+/* The Host screen's title, status line and bookmarks: at the start, and
+ * again after the identity screen, whose hint held the status line. */
+static void host_screen(void)
+{
+  ui_line(0, "MEGA65 SSH Client", 0);
+  ui_status("curve25519, ed25519, chacha20-poly1305; hosts remembered in KNOWNHOSTS", 0);
+  draw_marks();
+}
+
 static unsigned char session_setup(void)
 {
   unsigned char i;
   const char *err;
   unsigned int v = 0;
   ui_clear_rows(1, UI_ROW_LAST_BODY);
-  ui_line(0, "MEGA65 SSH Client", 0);
   ui_line(UI_ROW_KEYS, "RETURN accepts a line   RUN/STOP goes back   F1 identity   HELP ends a session", 0);
-  ui_status("curve25519, ed25519, chacha20-poly1305; hosts remembered in KNOWNHOSTS", 0);
-  draw_marks();
+  host_screen();
   for (;;) {
     unsigned char n = 0, del = 0, digits = 0;
     i = ui_read_line(3, "Host: ", host, sizeof host - 1, 0);
     if (!i) return 2;
-    if (i == 2) { identity_screen(); ui_line(0, "MEGA65 SSH Client", 0); draw_marks(); continue; }
+    if (i == 2) { identity_screen(); host_screen(); continue; }
     if (!host[0]) continue;
     /* A number picks a bookmark; D and a number deletes one (5.27). */
     i = 0;
