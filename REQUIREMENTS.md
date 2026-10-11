@@ -862,6 +862,33 @@ meant to. Verified: the release image copied plainly to the card, the
 host screen drawn with the right glyphs, the font bytes read back as
 the ROM's. Version 0.4.2; gopher 0.4.2; FTP 0.4.3.
 
+### 5.39 MEGA+K types the public key into the session (2026-10-11)
+
+Putting the identity on a server meant copying 68 base64 characters
+off the F1 screen by hand. MEGA+K in a session now sends the key line
+as OpenSSH writes it, `ssh-ed25519 <base64> mega65`, without RETURN,
+beside MEGA+M, F and B; no identity is three border flashes, as MEGA+M
+says no room. Only the public half is read. The line is 87 characters
+and `ui_scratch` holds 80, so it goes in three sends (prefix, key,
+comment). An ssh-copy-id that runs a remote command (an `exec`
+request, `exit-status`) was weighed and left for later: it would have
+cost several hundred bytes and works only where there is a POSIX shell,
+while typing the key works anywhere text is typed.
+
+Cost: ssh.prg 37,799 to 38,074 bytes (llvm-mos v23.2.0 on Linux); the
+soft stack 4,885 to 4,610, over the 1 KB floor. Two variants that
+looked smaller were larger: `noinline` (+22) and building the prefix
+in `ui_scratch` for two sends (+54).
+
+On the machine, against the test server with a real shell: a fresh
+identity (G), a password login, `cat > mk.txt`, MEGA+K (pressed with
+mega-net's `tap.py '3d 25'`), RETURN, CTRL+D. The file held 88 bytes,
+the line and its newline; `ssh-keygen -lf` read it as an Ed25519 key
+with the fingerprint the F1 screen shows. `exit` ended the session with
+status 0 and the client back at its own screen. No screenshot was taken
+in the session; the server's log and the file were the witnesses. Not
+tested: the three flashes without an identity.
+
 ### 5.38 The stall's real cause, fixed in mega-net 0.5 (2026-10-09)
 
 5.37's mega-net 0.4 waited for transmit-done, which hid the crash
