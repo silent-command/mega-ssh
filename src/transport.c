@@ -16,7 +16,7 @@ uint16_t ssh_rx_len;
 void (*ssh_status)(const char *what);
 unsigned char (*ssh_ask_hostkey)(const uint8_t key[32], unsigned char changed);
 
-#define VERSION_STRING "SSH-2.0-mega65ssh_0.4.12"
+#define VERSION_STRING "SSH-2.0-mega65ssh_0.4.13"
 #define KEX_NAMES "curve25519-sha256,curve25519-sha256@libssh.org,kex-strict-c-v00@openssh.com"
 #define HOSTKEY_NAME "ssh-ed25519"
 #define CIPHER_NAME "chacha20-poly1305@openssh.com"
