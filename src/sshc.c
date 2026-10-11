@@ -296,6 +296,7 @@ static unsigned char session_setup(void)
   }
   if (auth_s[0] != ident_auth) ident_set_auth(auth_s[0]);
   if (!ui_read_line(6, "User: ", user, sizeof user - 1, 0) || !user[0]) return 0;
+  ident_set_user(user);                            /* the next default, on the disk (5.41) */
 picked:
   for (i = 0; port_s[i] >= '0' && port_s[i] <= '9'; i++) v = v * 10 + (unsigned int)(port_s[i] - '0');
   port = v ? v : 22;
@@ -330,7 +331,7 @@ int main(void)
   ui_status("gathering randomness...", 0);
   rnd_init();
   hosts_load(boot_drive);
-  ident_load(boot_drive);
+  ident_load(boot_drive, user);
   marks_load(boot_drive);
   strcpy(port_s, "22");
   ssh_status = status_cb;

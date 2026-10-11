@@ -16,7 +16,7 @@ One disk, `SSH.D81`, carries the client, the stack and the crypto.
 
 Mount the disk and `RUN "SSH"`. The host screen asks for a host, a
 port, the authentication method (`p` for a password, `i` for the
-identity on the disk; the choice is remembered), a user name, and a password if password authentication is selected. The first connection to a host shows
+identity on the disk; the choice is remembered), a user name (the last one is offered again, kept in `SSHUSER`), and a password if password authentication is selected. The first connection to a host shows
 its key's fingerprint and asks whether to trust it; the answer is
 kept in `KNOWNHOSTS` on the disk, and a host whose key changes later
 is refused with a warning.

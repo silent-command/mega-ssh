@@ -862,6 +862,38 @@ meant to. Verified: the release image copied plainly to the card, the
 host screen drawn with the right glyphs, the font bytes read back as
 the ROM's. Version 0.4.2; gopher 0.4.2; FTP 0.4.3.
 
+### 5.41 The user name is remembered on the disk (2026-10-11)
+
+The User prompt offered the last name only within one run. It is now
+kept in SSHUSER, up to 31 bytes, written after the User prompt when it
+changed and loaded at start into the prompt's default. Not in SSHAUTH
+after the method byte, which was the first version: the SFTP client
+keeps its own copy of `ident.c`, shares SSHAUTH on a common disk
+(net-tools.d81), and reads it as exactly one byte, so a longer file
+would have cost SFTP its default and an SFTP write would have cut the
+name off. SSHUSER is the SSH client's alone. `tools/deploy.py` carries
+it with the others. Cost: 161 bytes; the soft stack has 4,424.
+
+On the machine, watched through the HDMI capture: a disk without
+SSHUSER, the name `tester` typed, the connection refused (no server);
+the file on the card read back as the six bytes `tester` (the first
+write of a file the disk did not have, which 5.26 had left to watch,
+worked). A fresh RUN offered `tester` at the User prompt and `i` at
+Auth. Typing `mega65` there replaced the default rather than appending,
+and the file read back as `mega65`, six bytes, nothing left of the
+longer name.
+
+On the way, the card's SSH.D81 turned out to be the plain 0.4.12
+release image, byte for byte the copy in the filehost folder, with no
+IDENTITY or KNOWNHOSTS: it had been put there outside `deploy.py`
+between 12:32 and 13:54, after 0.4.12 had logged in with the identity
+at 12:28. `deploy.py` said so ("an earlier card image ... may still
+hold the identity"), and the 12:27 card image under build/deploy did:
+its IDENTITY and KNOWNHOSTS went back onto the card with c1541, and the
+identity screen showed the same fingerprint. Any copy of a release
+disk onto the card replaces the user's account keys; only `deploy.py`
+carries them.
+
 ### 5.40 The identity screen's hint outlived it (2026-10-11)
 
 Seen in an HDMI capture: back from the identity screen with RUN/STOP,
