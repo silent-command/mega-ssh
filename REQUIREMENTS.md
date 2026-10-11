@@ -886,8 +886,20 @@ mega-net's `tap.py '3d 25'`), RETURN, CTRL+D. The file held 88 bytes,
 the line and its newline; `ssh-keygen -lf` read it as an Ed25519 key
 with the fingerprint the F1 screen shows. `exit` ended the session with
 status 0 and the client back at its own screen. No screenshot was taken
-in the session; the server's log and the file were the witnesses. Not
-tested: the three flashes without an identity.
+in the session; the server's log and the file were the witnesses.
+
+Then again with eyes, through an HDMI capture card on the development
+PC (a MacroSilicon MS2109, GStreamer, uncompressed 720x576), which
+never touches the serial monitor and so is safe in a session where `-S`
+is not (5.24). The first in-session pictures: the zsh prompt, the key
+line typed with the cursor after "mega65" and no RETURN, and the
+client's "the session ended, exit status 0"; the second file was
+byte for byte the first. Without an identity (the build's disk, its
+empty IDENTITY, put on the card, the disk with the identity kept and
+put back after): three white border flashes in 25 fps video, about two
+frames on and three off each, the session left as it was, and nothing
+received by the server. The card's disk was then restored and its
+identity screen showed the same fingerprint.
 
 ### 5.38 The stall's real cause, fixed in mega-net 0.5 (2026-10-09)
 
