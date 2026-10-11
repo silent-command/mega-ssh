@@ -233,6 +233,20 @@ static void toggle_mark(void)
   else flash_border(marks_add(host, port_s, auth_s, user) ? 1 : 3);
 }
 
+/* MEGA+K in a session: the public key typed into the session as OpenSSH
+ * writes it, with the comment "mega65" and no RETURN, so it can go into
+ * authorized_keys by a cat or an editor on the host. No identity is
+ * three flashes. Only the public half is read. Three sends, because the
+ * line is 87 characters and ui_scratch holds 80. */
+static unsigned char type_key(void)
+{
+  if (!ident_present) { flash_border(3); return 1; }
+  ident_public_b64(ui_scratch);
+  return ch_send((const uint8_t *)"ssh-ed25519 ", 12) &&
+         ch_send((const uint8_t *)ui_scratch, 68) &&
+         ch_send((const uint8_t *)" mega65", 7);
+}
+
 static unsigned char session_setup(void)
 {
   unsigned char i;
@@ -363,6 +377,7 @@ int main(void)
         if (mods & MOD_MEGA) {
           if (k >= 0xc1 && k <= 0xda) k = (unsigned char)(k & 0x7f);   /* MEGA+letter arrives as the capital with bit 7 set (5.29) */
           if (k == 'm' || k == 'M') { toggle_mark(); continue; }
+          if (k == 'k' || k == 'K') { if (!type_key()) break; continue; }
           if (k == 'f' || k == 'F' || k == 'b' || k == 'B') {
             /* Cycle through the screen module, never a local copy: it is
              * the one authority on these colours, and the terminal is

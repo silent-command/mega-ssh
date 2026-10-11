@@ -31,6 +31,11 @@ key as OpenSSH writes it and its fingerprint, which `ssh-keygen -lf`
 confirms. Put that line in a server's `authorized_keys` and log in
 with `i`. R replaces the key.
 
+To put it there from the MEGA65, log in with the password and type
+`mkdir -p ~/.ssh; cat >> ~/.ssh/authorized_keys`, then MEGA+K,
+RETURN and CTRL+D. MEGA+K types the key; it does not check whether
+the server already has it.
+
 If the machine is in its 80x50 mode when the client starts, the
 session is 80x50.
 
@@ -46,7 +51,7 @@ On the host screen:
 | D and a number | delete that bookmark |
 | Y | at the fingerprint prompt, trust this host |
 
-In a session every key goes to the host except the three the host
+In a session every key goes to the host except the four the host
 never needs:
 
 | Key | Does |
@@ -55,6 +60,7 @@ never needs:
 | MEGA + F | next text color |
 | MEGA + B | next background and border color (the first press: black) |
 | MEGA + M | bookmark this host, port, method and user, or remove the bookmark if it is one; the border flashes once for saved, twice for removed, three times for no room |
+| MEGA + K | type the identity's public key into the session, `ssh-ed25519 … mega65`, without RETURN; three border flashes if there is no identity |
 
 What the host receives:
 
