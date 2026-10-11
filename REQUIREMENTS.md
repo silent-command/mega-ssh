@@ -862,6 +862,18 @@ meant to. Verified: the release image copied plainly to the card, the
 host screen drawn with the right glyphs, the font bytes read back as
 the ROM's. Version 0.4.2; gopher 0.4.2; FTP 0.4.3.
 
+### 5.40 The identity screen's hint outlived it (2026-10-11)
+
+Seen in an HDMI capture: back from the identity screen with RUN/STOP,
+the Host screen still said "R replaces it (the old identity is gone
+for good)" on its status line. The F1 path redrew the title and the
+bookmarks but not the status line, which the identity screen had
+written. One `host_screen` now draws all three, at the start and after
+F1, and the client is two bytes smaller (38,072). The other way in,
+identity login with no identity, was never affected: "resolving
+host..." replaces the line at once. Checked on the machine by capture:
+F1, RUN/STOP, the algorithms line back.
+
 ### 5.39 MEGA+K types the public key into the session (2026-10-11)
 
 Putting the identity on a server meant copying 68 base64 characters
