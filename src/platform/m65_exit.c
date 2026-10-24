@@ -19,6 +19,12 @@
  * lists as spare: clear the MAP, restore $01 and $D030 to the values
  * the runtime's .fini uses, jump through the reset vector.
  *
+ * That reset uses the IEC serial bus whenever a disk image is mounted,
+ * and here one always is. A drive on the IEC port that is switched off
+ * holds the bus lines low, and the ROM waits forever: the banner, a
+ * blinking drive light, no READY. Switch the drive on or unplug it
+ * (mega-net PLATFORM.md, trap 17).
+ *
  * Before that: the 45E100 is held in reset (on this core its events
  * reach the IRQ vector past the enables, mega-net 5.16, and nothing
  * will service them), and the keyboard queue is drained. */
