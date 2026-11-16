@@ -70,8 +70,8 @@ void m65_screen_init(void)
    * light blue depending on what had run before. White is what the
    * machine itself displays, so start there. */
   if (!colours_known) {
-    start_border = PEEK(0xd020) & 0x0f;
-    start_bg = PEEK(0xd021) & 0x0f;
+    start_border = 0;                              /* black, as the Net-Tools menu is: no longer inherited from BASIC */
+    start_bg = 0;
     start_text = 1;                                /* white, what the machine itself shows */
     /* Never start invisible, however odd the inherited background is. */
     if (start_text == start_bg)

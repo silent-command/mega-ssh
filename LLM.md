@@ -6,7 +6,7 @@ Ed25519 public-key login with an identity made on the machine, trust
 on first use, a VT100 with color in 25 or 50 rows. C99 for llvm-mos,
 `-Oz`, the inner loops in assembly on the math unit. Version in
 `src/sshc.c` (`SSHC_VERSION`) and `src/transport.c` (`VERSION_STRING`).
-0BSD. Releases carry `bin/SSH.D81`, which must never contain
+Apache License 2.0. Releases carry `bin/SSH.D81`, which must never contain
 `IDENTITY`, `SSHAUTH`, `SSHUSER`, `KNOWNHOSTS` or `SSHMARKS` (the build does not put them there; do not add them).
 
 ## Read first
