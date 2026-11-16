@@ -50,11 +50,12 @@ void chacha20_xor64(const uint8_t key[32], const uint8_t nonce[8], uint64_t coun
 
 /* ---- Poly1305 (RFC 8439) --------------------------------------------- */
 typedef struct {
-  uint32_t r[17], h[17];      /* 8-bit limbs in 32-bit words, TweetNaCl's arrangement */
+  uint8_t h[20];              /* the accumulator, five 32-bit limbs little-endian; bits 128 up in the last */
+  uint8_t rr[32];             /* eight 32-bit limbs: 1-3 are 5 r[i] / 4, 4-7 are r[0..3],
+                                 the multipliers in the order poly1305.c reads them */
   uint8_t s[16];
   uint8_t buf[16];
   uint8_t len;
-  uint8_t rr_ready;           /* the multiplier table for this r is built (target) */
 } poly1305_ctx;
 
 void poly1305_init(poly1305_ctx *c, const uint8_t key[32]);

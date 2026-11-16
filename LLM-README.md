@@ -187,13 +187,18 @@ accumulator kept in the Q register, the four registers A, X, Y and Z
 used as one. The C is unchanged and the host suite still checks it.
 Measured on the frame counter:
 
-| Primitive | Compiled C | Assembly loops | Now |
-|---|---|---|---|
-| X25519, one shared secret | 14.2 s | 7.4 s | 3.5 s |
-| Ed25519, one verification | 48 s | 24 s | 12.4 s |
-| Poly1305, 4 KB | 3.8 s | 0.32 s | 12 KB/s |
-| ChaCha20, 4 KB | 0.10 s | | 40 KB/s |
-| Connect to shell | | 26 s | 10 s |
+| Primitive | Compiled C | Assembly loops | 32-bit limbs | Now (5.32) |
+|---|---|---|---|---|
+| X25519, one shared secret | 14.2 s | 7.4 s | 3.5 s | 2.2 s |
+| Ed25519, one verification | 48 s | 24 s | 12.4 s | 3.3 s |
+| Poly1305, 4 KB | 3.8 s | 0.32 s | 12 KB/s | about 110 KB/s (Xemu) |
+| ChaCha20, 4 KB | 0.10 s | | 40 KB/s | 40 KB/s |
+| Connect to shell | | 26 s | 10 s | about 8 s |
+
+The last column: the inversions as ref10's addition chain, Ed25519
+verified in one pass (Straus) instead of two ladders, Poly1305 in
+32-bit limbs; the shared secret and the verification together 5.5 s on
+the machine against 10.4 from the disk before (REQUIREMENTS.md 5.32).
 
 Signing with the identity is one more base-point multiply, about ten
 seconds, so a key login takes twenty. The hashes were shrunk for room
@@ -229,10 +234,12 @@ adversarial: a wrong host key, an oversized banner, a drop mid-exchange,
 no common algorithm. Then the Mac's OpenSSH by hand, and a polling test
 driver that types into the MEGA65 over serial and reads its screen.
 
-**Randomness.** The MEGA65 has no random-number hardware this program
-can reach. The seed is timing jitter: the raster position, a CIA timer
-and the ethernet controller's counters sampled at every frame for a
-second, then keystrokes and network replies stirred in, all hashed.
+**Randomness.** The seed is timing jitter: the raster position, a CIA
+timer and the ethernet controller's counters sampled at every frame for
+a second, with the machine's random register (`$D7EF`, HWRNGRAND) and
+the FPGA's noise bit (`$D6DE`) beside them, then keystrokes and network
+replies stirred in, all hashed. Neither register has been measured as
+a source, so they add to the timing and never replace it.
 Good for an ephemeral exchange key; for a long-lived identity it is a
 hobbyist's source, and the identity screen says so by what it is.
 

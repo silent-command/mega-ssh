@@ -1,11 +1,11 @@
-; The two multiply-accumulate loops that decide how long a handshake
-; takes, on the 45GS02's math unit: MULTINA at $D770-$D773, MULTINB at
+; The multiply-accumulate loops that decide how long a handshake
+; takes, and Poly1305's block, on the 45GS02's math unit: MULTINA at $D770-$D773, MULTINB at
 ; $D774-$D777, the 64-bit product from $D778. Compiled C spent about 780
 ; cycles per 16x16 product (REQUIREMENTS.md 5.2); these loops spend
 ; about 130. The C in curve25519.c and poly1305.c does the same work on
 ; the host, and the same test vectors check both.
 ;
-; Both routines read and write fixed buffers the C side owns, so no
+; The routines read and write fixed buffers the C side owns, so no
 ; zero page is touched and the calling convention does not matter.
 
 ; The assembler gives a Q instruction on a symbol the zero-page form,
@@ -18,6 +18,10 @@
         .macro STQA sym
         .byte 0x42, 0x42
         sta \sym
+        .endm
+        .macro ADCQA sym
+        .byte 0x42, 0x42
+        adc \sym
         .endm
 
         .text
@@ -148,92 +152,176 @@ cols32_done:
         ldz #0
         rts
 
-; ---- poly_mul_m65: poly_mul_x[0..16] (32-bit each) =
-;      sum over j of poly_mul_h[j] * (j <= i ? r[i-j] : 320*r[i+17-j]) ----
+; ---- poly_block_m65: one Poly1305 block on the fixed buffers ----
 ;
-; poly_mul_h: 17 bytes. poly_mul_rr: 34 entries of 4 bytes. For column
-; i the multiplier for h[j] is entry i-j+17: j <= i gives entries
-; 17..33, which the C side fills with r[0..16]; j > i gives entries
-; 1..16, filled with 320*r[1..16] (entry e holds 320*r[e]).
+; poly_h = (poly_h + poly_m + poly_hibit * 2^128) * r, partly reduced,
+; as the host's C in poly1305.c does it. h is five 32-bit limbs (20
+; bytes; h[4] is below 8); poly_rr is eight: entries 1-3 are 5 r[i] / 4,
+; entries 4-7 are r[0..3]. Column k of the product sums h[j] times entry
+; k - j + 4, and h[4] * r[0] is a fifth column: ptab lists the 20
+; products in that order, $ff ending a column, $fe the block. A column
+; sum is below 2^63 (h[j] < 2^32, r[i] < 2^28), so a 64-bit accumulator
+; with a guard byte carries it. The old loop did 289 products of 8 x 8
+; bits per block, and the C around it 17-limb carry loops (5.21).
 
-        .global poly_mul_m65
-poly_mul_m65:
+        .global poly_block_m65
+poly_block_m65:
+        clc                     ; h += m, then the 2^128 bit
+        LDQA poly_h
+        ADCQA poly_m
+        STQA poly_h
+        LDQA poly_h+4
+        ADCQA poly_m+4
+        STQA poly_h+4
+        LDQA poly_h+8
+        ADCQA poly_m+8
+        STQA poly_h+8
+        LDQA poly_h+12
+        ADCQA poly_m+12
+        STQA poly_h+12
+        lda poly_h+16           ; below 8: its low byte carries it
+        adc poly_hibit
+        sta poly_h+16
         lda #0
-        sta $d771
-        sta $d772
-        sta $d773
-        sta $d777
-        sta kk                  ; column i
-pcol:
-        lda #0
-        sta acc0
-        sta acc1
-        sta acc2
-        sta acc3
-        sta jj                  ; j = 0
-pprod:
-        ldy jj
-        lda poly_mul_h,y
+        ldx #8
+pz:
+        sta pacc,x
+        dex
+        bpl pz
+        sta ppos
+        sta pout
+pnext:
+        ldy ppos
+        lda ptab,y
+        bmi pcol                ; $ff or $fe
+        tax                     ; MULTINA = h[j]
+        lda poly_h,x
         sta $d770
-        ; entry e = i - j + 17, times 4
-        lda kk
-        sec
-        sbc jj
-        clc
-        adc #17
-        asl
-        asl
-        tay
-        lda poly_mul_rr,y
+        lda poly_h+1,x
+        sta $d771
+        lda poly_h+2,x
+        sta $d772
+        lda poly_h+3,x
+        sta $d773
+        ldx ptab+1,y            ; MULTINB = its multiplier
+        lda poly_rr,x
         sta $d774
-        lda poly_mul_rr+1,y
+        lda poly_rr+1,x
         sta $d775
-        lda poly_mul_rr+2,y
+        lda poly_rr+2,x
         sta $d776
+        lda poly_rr+3,x
+        sta $d777
+        iny
+        iny
+        sty ppos                ; before the Q instructions take Y
+        clc                     ; the LDQ is the settling time the product needs
+        LDQA pacc
+        adcq $d778
+        STQA pacc
+        LDQA pacc+4
+        adcq $d77c
+        STQA pacc+4
+        bcc pnext_nc
+        inc pacc+8
+pnext_nc:
+        jmp pnext               ; a short branch over a jmp, never a 16-bit branch (5.3)
+pcol:
+        cmp #$fe
+        beq pdone
+        iny
+        sty ppos
+        ldx pout                ; the column's word = the low 32 bits; acc >>= 32
+        lda pacc
+        sta ptmp,x
+        lda pacc+1
+        sta ptmp+1,x
+        lda pacc+2
+        sta ptmp+2,x
+        lda pacc+3
+        sta ptmp+3,x
+        txa
         clc
-        lda acc0
-        adc $d778
-        sta acc0
-        lda acc1
-        adc $d779
-        sta acc1
-        lda acc2
-        adc $d77a
-        sta acc2
-        lda acc3
-        adc $d77b
-        sta acc3
-        inc jj
-        lda jj
-        cmp #17
-        bcc pprod
-        ; store x[i]
-        lda kk
-        asl
-        asl
-        tay
-        lda acc0
-        sta poly_mul_x,y
-        lda acc1
-        sta poly_mul_x+1,y
-        lda acc2
-        sta poly_mul_x+2,y
-        lda acc3
-        sta poly_mul_x+3,y
-        inc kk
-        lda kk
-        cmp #17
-        bcs pcols_done
-        jmp pcol
-pcols_done:
+        adc #4
+        sta pout
+        LDQA pacc+4
+        STQA pacc
+        lda pacc+8
+        sta pacc+4
+        lda #0
+        sta pacc+5
+        sta pacc+6
+        sta pacc+7
+        sta pacc+8
+        jmp pnext
+pdone:
+        ; the bits from 2^130 up, times 5: c = (t4 & ~3) + (t4 >> 2)
+        lda ptmp+16
+        sta psh
+        and #$fc
+        sta pc
+        lda ptmp+17
+        sta psh+1
+        sta pc+1
+        lda ptmp+18
+        sta psh+2
+        sta pc+2
+        lda ptmp+19
+        sta psh+3
+        sta pc+3
+        lsr psh+3
+        ror psh+2
+        ror psh+1
+        ror psh
+        lsr psh+3
+        ror psh+2
+        ror psh+1
+        ror psh
+        clc
+        LDQA pc
+        ADCQA psh
+        STQA pc
+        clc                     ; h = t[0..3] + c, h[4] = (t4 & 3) + the carry
+        LDQA ptmp
+        ADCQA pc
+        STQA poly_h
+        LDQA ptmp+4
+        ADCQA pzero
+        STQA poly_h+4
+        LDQA ptmp+8
+        ADCQA pzero
+        STQA poly_h+8
+        LDQA ptmp+12
+        ADCQA pzero
+        STQA poly_h+12
+        lda ptmp+16
+        and #3
+        adc #0
+        sta poly_h+16
+        lda #0
+        sta poly_h+17
+        sta poly_h+18
+        sta poly_h+19
+        ldz #0
         rts
 
+        .section .rodata,"a"
+ptab:
+        .byte 0,16, 4,12, 8,8, 12,4, 0xff               ; h0 r0, h1 5r3/4, h2 5r2/4, h3 5r1/4
+        .byte 0,20, 4,16, 8,12, 12,8, 16,4, 0xff        ; h0 r1, h1 r0, h2 5r3/4, h3 5r2/4, h4 5r1/4
+        .byte 0,24, 4,20, 8,16, 12,12, 16,8, 0xff
+        .byte 0,28, 4,24, 8,20, 12,16, 16,12, 0xff
+        .byte 16,16, 0xff, 0xfe                          ; h4 r0, at 2^128
+pzero:
+        .byte 0, 0, 0, 0
+
         .bss
-acc0:   .space 1
-acc1:   .space 1
-acc2:   .space 1
-acc3:   .space 1
-acc4:   .space 1
+pacc:   .space 9
+ptmp:   .space 20
+pc:     .space 4
+psh:    .space 4
+ppos:   .space 1
+pout:   .space 1
 kk:     .space 1
 ii:     .space 1
 jj:     .space 1

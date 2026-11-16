@@ -1,15 +1,20 @@
-/* Probe: the Poly1305 assembly loop alone, on trivial inputs, and the
- * whole tag against the RFC vector. Its own spike: added to spike_mul it
- * moved the program enough that an earlier step crashed (5.3). */
+/* Probe: the Poly1305 block in assembly alone, on trivial inputs, and
+ * the whole tag against the RFC vector. Its own spike: added to
+ * spike_mul it moved the program enough that an earlier step crashed
+ * (5.3). */
 #include <string.h>
 #include "mega65/memory.h"
 #include "m65_screen.h"
 #include "ui.h"
 #include "crypto.h"
 
-extern uint8_t poly_mul_h[17];
-extern uint32_t poly_mul_rr[34], poly_mul_x[17];
-void poly_mul_m65(void);
+extern uint8_t poly_h[20], poly_rr[32], poly_m[16], poly_hibit;
+void poly_block_m65(void);
+
+static unsigned long word(const uint8_t *p)
+{
+  return (unsigned long)p[0] | ((unsigned long)p[1] << 8) | ((unsigned long)p[2] << 16) | ((unsigned long)p[3] << 24);
+}
 
 static char line[81];
 static char num[12];
@@ -35,23 +40,20 @@ static uint8_t key[32], tag[16], want[16];
 
 int main(void)
 {
-  unsigned i;
   mega65_io_enable();
   m65_screen_init();
-  ui_line(0, "ssh spike: the Poly1305 loop  build " __TIME__, 0);
-  ui_line(row++, "loop 1: calling...", 0);
-  for (i = 0; i < 17; i++) { poly_mul_h[i] = 0; poly_mul_x[i] = 7; }
-  for (i = 0; i < 34; i++) poly_mul_rr[i] = 0;
-  poly_mul_h[0] = 1; poly_mul_rr[17] = 2; poly_mul_rr[0] = 640;
-  poly_mul_m65();
-  say("loop 1: x[0] ", poly_mul_x[0], " x[1] ", poly_mul_x[1]);
-  say("   x[16] ", poly_mul_x[16], " (want 2, 0, 0)", 0);
-  for (i = 0; i < 17; i++) { poly_mul_h[i] = 0; poly_mul_x[i] = 7; }
-  for (i = 0; i < 34; i++) poly_mul_rr[i] = 0;
-  poly_mul_h[16] = 1; poly_mul_rr[17] = 3; poly_mul_rr[0] = 960; poly_mul_rr[18] = 5; poly_mul_rr[1] = 1600;
-  poly_mul_m65();
-  say("loop 2: x[16] ", poly_mul_x[16], " x[0] ", poly_mul_x[0]);
-  ui_line(row++, "   (want 3 and 1600)", 0);
+  ui_line(0, "ssh spike: the Poly1305 block  build " __TIME__, 0);
+  ui_line(row++, "block 1: calling...", 0);
+  memset(poly_h, 0, 20); memset(poly_rr, 0, 32); memset(poly_m, 0, 16);
+  poly_m[0] = 1; poly_hibit = 0; poly_rr[16] = 2;          /* m = 1, r0 = 2 */
+  poly_block_m65();
+  say("block 1: h0 ", word(poly_h), " h1 ", word(poly_h + 4));
+  say("   h4 ", word(poly_h + 16), " (want 2, 0, 0)", 0);
+  memset(poly_h, 0, 20); memset(poly_rr, 0, 32); memset(poly_m, 0, 16);
+  poly_hibit = 1; poly_rr[16] = 3; poly_rr[4] = 5;         /* h4 = 1, r0 = 3, 5r1/4 = 5 */
+  poly_block_m65();
+  say("block 2: h1 ", word(poly_h + 4), " h4 ", word(poly_h + 16));
+  ui_line(row++, "   (want 5 and 3)", 0);
   hex(key, "85d6be7857556d337f4452fe42d506a80103808afb0db2fd4abff6af4149f51b");
   hex(want, "a8061dc1305136c6c22b8baf0c0127a9");
   ui_line(row, "tag: computing...", 0);

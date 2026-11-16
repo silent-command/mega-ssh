@@ -1162,3 +1162,24 @@ Verified: black set, a host `tput setab 4; clear` left the background
 and border black and the cells reversed in blue; the suite's check
 turned around to say so. Version 0.4.3. 5.20's "background follows a
 full clear" is withdrawn.
+
+### 5.32 Ed25519 verified in one pass, the inversion chain, Poly1305 (2026-11-16)
+
+Verification is Straus's joint pass (a doubling a bit, dbl-2008-hwcd,
+and an addition of B, -A or B - A), not two constant-time ladders;
+everything in it is public. Signing keeps the ladder. The inversions
+are ref10's chain as a table; B and B - A live in `lx`'s room while
+it is idle; Poly1305 is the Gemini client's (its 5.18). Xemu: verify
+7.98 s to 3.30. On the host 3,000 signatures and verifications and
+2,000 junk keys agree with the old code; on Xemu RFC 8032 and random
+signatures. The bank has 444 bytes free. A shared secret of all zeros
+ends the exchange (`SSH_E_PROTOCOL`, RFC 8731 3); not seen on the
+machine. Each sample also reads `$D7EF` and `$D6DE`.
+
+On the machine, password login to the echo server from the Net-Tools
+menu, no screenshot while the session ran (5.24): a line echoed,
+`quit`, exit status 0. From the server's log, the reply to the
+client's key share to the end of the exchange (the shared secret and
+the host key's signature): 5.51 s; the previous Net-Tools disk on the
+same host, already trusted: 10.42 s. The client's key share: 2.19 s
+against 2.36. The identity was not touched.

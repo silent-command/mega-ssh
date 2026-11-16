@@ -1,13 +1,14 @@
 /* Random bytes for the key exchange's private scalar, the KEXINIT cookie
  * and packet padding.
  *
- * The MEGA65 has no random-number hardware this program can reach, so
- * the seed is timing jitter: over about a second, the raster position
+ * The seed is timing jitter: over about a second, the raster position
  * and a CIA timer are sampled at every change of the frame counter,
  * along with the ethernet controller's frame counters if the stack is
- * up, and all of it is hashed. Keystrokes and network replies add more
- * through rnd_stir. Output is SHA-256 of the seed and a counter. This is
- * a hobbyist's source, not a certified one; REQUIREMENTS.md says so. */
+ * up, and the machine's random register and thermal noise bit (hwrng
+ * below), and all of it is hashed. Keystrokes and network replies add
+ * more through rnd_stir. Output is SHA-256 of the seed and a counter.
+ * This is a hobbyist's source, not a certified one; REQUIREMENTS.md
+ * says so. */
 #include "mega65/memory.h"
 #include "ckit.h"
 #include "rnd.h"
@@ -16,12 +17,26 @@ static uint8_t seed[32];          /* the pool is sha256 slot 3 in the bank */
 static uint32_t counter;
 static uint8_t stir_byte;
 
+/* The MEGA65's own random-number generator (the MEGA65 book, K-17:
+ * $D7EF HWRNGRAND, a read starts the next; $D7FE bit 7 HWRNGNOTRDY) and
+ * the FPGA's thermal noise bit ($D6DE bit 0, mega65-libc's random.c).
+ * Both go into the pool beside the timing, never instead of it: the wait
+ * is bounded, so a core without them costs a few cycles and adds
+ * nothing, and neither has been measured on this machine. */
+static uint8_t hwrng(void)
+{
+  uint8_t i;
+  for (i = 0; i < 32; i++)
+    if (!(PEEK(0xd7fe) & 0x80)) break;
+  return PEEK(0xd7ef);
+}
+
 static void sample(void)
 {
-  uint8_t s[6];
+  uint8_t s[8];
   s[0] = PEEK(0xd012); s[1] = PEEK(0xd7fa); s[2] = PEEK(0xdc04); s[3] = PEEK(0xdc05);
-  s[4] = PEEK(0xd6e1); s[5] = stir_byte++;
-  ck_sha256_update(3, s, 6);
+  s[4] = PEEK(0xd6e1); s[5] = stir_byte++; s[6] = hwrng(); s[7] = PEEK(0xd6de);
+  ck_sha256_update(3, s, 8);
 }
 
 void rnd_init(void)

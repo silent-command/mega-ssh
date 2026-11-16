@@ -46,8 +46,8 @@ driver):
 source tools/m65ssh.sh
 deploy                                        tools/deploy.py
 boot_ssh                                      to the Host prompt, retrying the start-up stick
-login 192.168.1.232 2223 mega65 mega65 ' % '  password login, waits for the zsh prompt
-login_key 192.168.1.232 2223 mega65 ' % '     identity login, generating one if the disk has none
+login 192.168.1.251 2223 mega65 mega65 ' % '  password login, waits for the zsh prompt
+login_key 192.168.1.251 2223 mega65 ' % '     identity login, generating one if the disk has none
 ```
 
 **Never take a screenshot while a session is running**; it wedges the
@@ -65,7 +65,7 @@ stack `$BE00-$BFFF`), the terminal parser at `$1E000-$1F7FF` (the `hi`
 region; `$1F800` up is the color RAM mirror). Bank 5 `$5E900`: the
 known-hosts text; `$11800` the bookmark text. The client: `$2001` to
 about `$CE00`, 500 bytes free, without the console library (5.27). The
-bank: about 300 bytes free in `ram`, 200 in `hi`. Before adding code,
+bank: about 440 bytes free in `ram` (5.32), 200 in `hi`. Before adding code,
 find its bytes; the findings 5.4, 5.7 and 5.22 say what was moved and
 how (buffers built in `ssh_rx` while idle, hashes rolled, the
 self-test entry dropped, `-Oz`).

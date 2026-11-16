@@ -12,12 +12,22 @@ static const uint32_t K[64] = {
 };
 
 /* A rotate as a call, as in sha512.c: the inline expansions were most
- * of a 3 KB compression, and this hash is per login, not per packet (5.22). */
+ * of a 3 KB compression, and this hash is per login, not per packet (5.22).
+ * Whole bytes first, then at most three single bits, leftwards when that
+ * is shorter (MOSTLS's generated rotations do the same): a sixth off the
+ * hash for 65 bytes, where up to seven bits a rotation went right. */
 static uint32_t __attribute__((noinline)) ROR(uint32_t x, uint8_t n)
 {
-  uint8_t q = (uint8_t)(n >> 3), r = (uint8_t)(n & 7);
-  while (q--) x = (x >> 8) | (x << 24);
-  while (r--) x = (x >> 1) | (x << 31);
+  uint8_t r;
+  if (n & 16) x = (x >> 16) | (x << 16);
+  if (n & 8) x = (x >> 8) | (x << 24);
+  r = (uint8_t)(n & 7);
+  if (r > 4) {                              /* a byte right, the rest back left */
+    x = (x >> 8) | (x << 24);
+    for (r = (uint8_t)(8 - r); r; r--) x = (x << 1) | (x >> 31);
+  } else {
+    for (; r; r--) x = (x >> 1) | (x << 31);
+  }
   return x;
 }
 

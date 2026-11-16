@@ -378,6 +378,9 @@ static unsigned char exchange(void)
 
   status("exchanging keys: the shared secret");
   ck_x25519(k, priv, q_s);
+  { uint8_t z = 0, j;                       /* RFC 8731 3: a small-order point from the server */
+    for (j = 0; j < 32; j++) z |= k[j];     /* gives all zeros, which MUST end the exchange */
+    if (!z) { ssh_error = SSH_E_PROTOCOL; return 0; } }
   wb_init(&b, kmp, sizeof kmp);
   wb_mpint(&b, k, 32);
   kmp_len = b.len;

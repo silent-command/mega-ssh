@@ -182,31 +182,51 @@ static int fe_eq(const fe a, const fe b)
 
 static uint8_t fe_parity(const fe a) { return (uint8_t)(a[0] & 1); }
 
-static void fe_inv(fe o, const fe i)
+/* The inverse and the square root's power by ref10's addition chains:
+ * 254 squarings and 11 multiplies, where square-and-multiply took 254
+ * and 252. Both climb to z^(2^250 - 1) the same way; written as calls
+ * the climb cost the bank 700 bytes, so it is a table of steps: slot
+ * dst = slot src squared n times, times slot mul (255: none; never dst).
+ * Slots: z, z^11, z^(2^10 - 1), z^(2^50 - 1), and the value being built. */
+static fe cs[5];
+
+static const uint8_t chain[11][4] = {
+  { 4, 0, 1, 255 },     /* z^2 */
+  { 2, 4, 2, 0 },       /* z^9 */
+  { 1, 4, 0, 2 },       /* z^11 */
+  { 4, 1, 1, 2 },       /* z^(2^5 - 1) */
+  { 2, 4, 5, 4 },       /* z^(2^10 - 1) */
+  { 4, 2, 10, 2 },      /* z^(2^20 - 1) */
+  { 3, 4, 20, 4 },      /* z^(2^40 - 1) */
+  { 3, 3, 10, 2 },      /* z^(2^50 - 1) */
+  { 4, 3, 50, 3 },      /* z^(2^100 - 1) */
+  { 2, 4, 100, 4 },     /* z^(2^200 - 1) */
+  { 4, 2, 50, 3 },      /* z^(2^250 - 1) */
+};
+
+static void chain_step(uint8_t dst, uint8_t src, uint8_t n, uint8_t mul)
 {
-  static fe c;
-  int a;
-  fe_copy(c, i);
-  for (a = 253; a >= 0; a--) {
-    fe_sq(c, c);
-    if (a != 2 && a != 4) fe_mul(c, c, i);
-    if (crypto_yield && (a & 15) == 0) crypto_yield();
+  uint8_t k;
+  fe_copy(cs[dst], cs[src]);
+  for (k = 0; k < n; k++) {
+    fe_sq(cs[dst], cs[dst]);
+    if (crypto_yield && (k & 15) == 15) crypto_yield();
   }
-  fe_copy(o, c);
+  if (mul != 255) fe_mul(cs[dst], cs[dst], cs[mul]);
 }
 
-static void fe_pow2523(fe o, const fe i)
+/* o = z^(2^250 - 1) squared n times, times slot last */
+static void fe_chain(fe o, const fe z, uint8_t n, uint8_t last)
 {
-  static fe c;
-  int a;
-  fe_copy(c, i);
-  for (a = 250; a >= 0; a--) {
-    fe_sq(c, c);
-    if (a != 1) fe_mul(c, c, i);
-    if (crypto_yield && (a & 15) == 0) crypto_yield();
-  }
-  fe_copy(o, c);
+  const uint8_t (*st)[4] = chain, (*end)[4] = chain + 11;
+  fe_copy(cs[0], z);
+  while (st < end) { chain_step((*st)[0], (*st)[1], (*st)[2], (*st)[3]); st++; }   /* a pointer walk (5.6) */
+  chain_step(4, 4, n, last);
+  fe_copy(o, cs[4]);
 }
+
+static void fe_inv(fe o, const fe z) { fe_chain(o, z, 5, 1); }        /* z^(p - 2) = z^(2^255 - 21) */
+static void fe_pow2523(fe o, const fe z) { fe_chain(o, z, 2, 0); }    /* z^((p - 5) / 8) = z^(2^252 - 3) */
 
 /* ---- X25519 ---------------------------------------------------------------- */
 
@@ -247,15 +267,30 @@ void x25519_base(uint8_t out[32], const uint8_t scalar[32])
 
 typedef fe ge[4];                      /* extended coordinates X, Y, Z, T */
 
+static fe ga, gb_, gc, gd, gt, gee, gf, gg, gh;   /* ge_add's and ge_dbl's scratch: they never nest */
+
 static void ge_add(ge p, const ge q)
 {
-  static fe a, b, c, d, t, e, f, g, h;
-  fe_sub(a, p[1], p[0]); fe_sub(t, q[1], q[0]); fe_mul(a, a, t);
-  fe_add(b, p[0], p[1]); fe_add(t, q[0], q[1]); fe_mul(b, b, t);
-  fe_mul(c, p[3], q[3]); fe_mul(c, c, D2);
-  fe_mul(d, p[2], q[2]); fe_add(d, d, d);
-  fe_sub(e, b, a); fe_sub(f, d, c); fe_add(g, d, c); fe_add(h, b, a);
-  fe_mul(p[0], e, f); fe_mul(p[1], h, g); fe_mul(p[2], g, f); fe_mul(p[3], e, h);
+  fe_sub(ga, p[1], p[0]); fe_sub(gt, q[1], q[0]); fe_mul(ga, ga, gt);
+  fe_add(gb_, p[0], p[1]); fe_add(gt, q[0], q[1]); fe_mul(gb_, gb_, gt);
+  fe_mul(gc, p[3], q[3]); fe_mul(gc, gc, D2);
+  fe_mul(gd, p[2], q[2]); fe_add(gd, gd, gd);
+  fe_sub(gee, gb_, ga); fe_sub(gf, gd, gc); fe_add(gg, gd, gc); fe_add(gh, gb_, ga);
+  fe_mul(p[0], gee, gf); fe_mul(p[1], gh, gg); fe_mul(p[2], gg, gf); fe_mul(p[3], gee, gh);
+}
+
+/* p = 2p: dbl-2008-hwcd for a = -1, 4 squarings and 4 multiplies where
+ * ge_add(p, p) takes 9 multiplies (the Explicit-Formulas Database). */
+static void ge_dbl(ge p)
+{
+  fe_sq(ga, p[0]); fe_sq(gb_, p[1]);               /* A = X^2, B = Y^2 */
+  fe_sq(gc, p[2]); fe_add(gc, gc, gc);             /* C = 2 Z^2 */
+  fe_add(gee, p[0], p[1]); fe_sq(gee, gee);
+  fe_sub(gee, gee, ga); fe_sub(gee, gee, gb_);     /* E = (X + Y)^2 - A - B */
+  fe_sub(gg, gb_, ga);                             /* G = -A + B */
+  fe_sub(gf, gg, gc);                              /* F = G - C */
+  fe_sub(gh, fe_0, ga); fe_sub(gh, gh, gb_);       /* H = -A - B */
+  fe_mul(p[0], gee, gf); fe_mul(p[1], gg, gh); fe_mul(p[3], gee, gh); fe_mul(p[2], gf, gg);
 }
 
 static void ge_cswap(ge p, ge q, uint16_t b)
@@ -287,11 +322,22 @@ static void ge_scalarmult(ge p, ge q, const uint8_t *s)
   }
 }
 
+static void ge_base(ge q)
+{
+  fe_copy(q[0], BX); fe_copy(q[1], BY); fe_copy(q[2], fe_1); fe_mul(q[3], BX, BY);
+}
+
+/* lx (modL's limbs) is idle whenever a point is being multiplied: it is
+ * only live inside reduce and the signing product. The base point the
+ * ladder walks, and verification's B and B - A, live in it then (5.22's
+ * room, again). */
+static union { int32_t lx[64]; ge g[2]; } sx;
+#define lx (sx.lx)
+
 static void __attribute__((noinline)) ge_scalarbase(ge p, const uint8_t *s)
 {
-  static ge q;
-  fe_copy(q[0], BX); fe_copy(q[1], BY); fe_copy(q[2], fe_1); fe_mul(q[3], BX, BY);
-  ge_scalarmult(p, q, s);
+  ge_base(sx.g[0]);
+  ge_scalarmult(p, sx.g[0], s);
 }
 
 /* Decompresses p into -A (the negated point), as TweetNaCl's unpackneg. */
@@ -348,7 +394,6 @@ static void __attribute__((noinline)) modL(uint8_t *r, int32_t x[64])
 
 /* Scratch shared by verification and signing, which never nest: the
  * bank has no room for a private set each (5.22). */
-static int32_t lx[64];
 static uint8_t h64[64], d64[64], r64[64];
 static ge gp, gq;
 static sha512_ctx shc;
@@ -361,21 +406,40 @@ static void __attribute__((noinline)) reduce(uint8_t *r)
   modL(r, lx);
 }
 
+/* S B - h A in one pass (Straus; Shamir's trick): a doubling per bit,
+ * and an addition of B, -A or B - A where either scalar's bit is set.
+ * Everything here is public, so it may take the time it takes; the two
+ * constant-time ladders it replaces did 4 additions a bit (5.22). */
 int ed25519_verify(const uint8_t sig[64], const uint8_t *msg, size_t n, const uint8_t pk[32])
 {
   static uint8_t t[32];
-  if (ge_unpackneg(gq, pk)) return 0;
+  int i;
+  uint8_t sb, hb;
+  if (ge_unpackneg(gq, pk)) return 0;    /* gq = -A */
   sha512_init(&shc);
   sha512_update(&shc, sig, 32);          /* R */
   sha512_update(&shc, pk, 32);           /* A */
   sha512_update(&shc, msg, n);           /* M */
   sha512_final(&shc, h64);
-  reduce(h64);
-  ge_scalarmult(gp, gq, h64);            /* h * (-A) */
-  ge_scalarbase(gq, sig + 32);           /* S * B */
-  ge_add(gp, gq);                        /* S * B - h * A, which must equal R */
-  ge_pack(t, gp);
+  reduce(h64);                           /* lx is free from here: B and B - A go there */
+#define gb (sx.g[0])
+#define gba (sx.g[1])
+  ge_base(gb);
+  memcpy(gba, gb, sizeof gba); ge_add(gba, gq);
+  fe_copy(gp[0], fe_0); fe_copy(gp[1], fe_1); fe_copy(gp[2], fe_1); fe_copy(gp[3], fe_0);
+  for (i = 255; i >= 0; i--) {
+    ge_dbl(gp);
+    sb = (uint8_t)((sig[32 + (i >> 3)] >> (i & 7)) & 1);
+    hb = (uint8_t)((h64[i >> 3] >> (i & 7)) & 1);
+    if (sb && hb) ge_add(gp, gba);
+    else if (sb) ge_add(gp, gb);
+    else if (hb) ge_add(gp, gq);
+    if (crypto_yield && (i & 7) == 0) crypto_yield();
+  }
+  ge_pack(t, gp);                        /* which must equal R */
   return crypto_equal(sig, t, 32);
+#undef gb
+#undef gba
 }
 
 /* ---- Ed25519 signing: a key from a seed, and a signature -------------
