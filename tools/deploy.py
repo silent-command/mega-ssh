@@ -5,7 +5,7 @@ user's account on a key-authenticated server), SSHAUTH (the
 authentication default), SSHUSER (the last user name), KNOWNHOSTS and SSHMARKS (the bookmarks). Replacing the disk image outright loses them all
 (REQUIREMENTS.md 5.22).
 
-    python3 tools/deploy.py [--port /dev/cu.usbserial-21301] [image.d81]
+    python3 tools/deploy.py [--port /dev/cu.usbserial-21301 | --port tcp#pi3:4510] [image.d81]
 
 Needs m65 and mega65_ftp from mega65-tools on the PATH (with or without
 the .osx suffix) and c1541 from VICE. The machine is reset first, as
@@ -16,11 +16,19 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 KEEP = ["identity", "sshauth", "sshuser", "knownhosts", "sshmarks"]          # c1541 wants lowercase; the client writes them upper-cased
 
+sys.path.insert(0, str(ROOT.parent / "mega-net" / "tools"))
+import device                          # where the MEGA65 is (serial or the keyboard bridge), which tools reach it
+
+
 def tool(name):
-    for cand in (name, name + ".osx"):
-        if shutil.which(cand):
-            return cand
-    sys.exit(f"{name} not found on the PATH")
+    if name == "c1541":
+        if shutil.which(name):
+            return name
+        sys.exit("c1541 not found on the PATH")
+    found = device.find_tool(name)
+    if not found:
+        sys.exit(f"{name} not found (MEGA65_TOOLS, the PATH, /usr/local/bin)")
+    return found
 
 def run(args, check=True):
     # bounded: a card session that stalls ends here instead of holding the
@@ -35,7 +43,7 @@ def run(args, check=True):
 
 def main():
     args = sys.argv[1:]
-    port = os.environ.get("MEGA65_PORT", "/dev/cu.usbserial-21301")
+    port = device.port()
     if "--port" in args:
         i = args.index("--port"); port = args[i + 1]; del args[i:i + 2]
     image = Path(args[0]) if args else ROOT / "bin" / "SSH.D81"
@@ -46,7 +54,7 @@ def main():
         td = Path(td)
         old, new = td / "old.d81", td / "SSH.D81"
         shutil.copy(image, new)
-        run([m65, "-F"], check=False); time.sleep(2)                  # reset: mega65_ftp refuses a running program
+        run([m65, "-l", port, "-F"], check=False); time.sleep(2)                  # reset: mega65_ftp refuses a running program
         r = run([ftp, "-l", port, "-c", f"get SSH.D81 {old}"], check=False)
         kept, absent = [], []
         if old.exists() and old.stat().st_size == 819200:
@@ -71,9 +79,9 @@ def main():
                 print("NOT on the card's disk, so not carried:", ", ".join(absent))
         else:
             print("no SSH.D81 on the card yet, nothing to keep")
-        run([m65, "-F"], check=False); time.sleep(2)   # reset again: a second card session straight after the first stalled twice (2026-09-29)
+        run([m65, "-l", port, "-F"], check=False); time.sleep(2)   # reset again: a second card session straight after the first stalled twice (2026-09-29)
         run([ftp, "-l", port, "-c", "del SSH.D81"], check=False)   # its own session: a del and a put in one stalled the card (2026-09-29)
-        run([m65, "-F"], check=False); time.sleep(2)
+        run([m65, "-l", port, "-F"], check=False); time.sleep(2)
         r = run([ftp, "-l", port, "-c", f"put {new} SSH.D81"], check=False)
         if "in " not in r.stdout and "bytes" not in r.stdout:
             sys.exit(f"the upload did not report success:\n{r.stdout}{r.stderr}")
