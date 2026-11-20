@@ -1,6 +1,7 @@
 #include "mega65/memory.h"
 #include "meganet.h"
 #include "m65_boot.h"
+#include "m65_exit.h"
 #include "transport.h"
 #include "netutil.h"
 
@@ -34,7 +35,10 @@ unsigned char net_up(const char **err)
    * into mega-net with the decimal flag set and the stack pointer moved:
    * about one boot in three (ssh 5.8, chased in 5.19). Quiet it here and
    * the window is empty; INIT brings it up. */
-  POKE(0xd6e0, 0x00);
+  /* Launched from the Net-Tools menu, the controller is running and its
+   * link up, left so by the program before: no hold, and INIT_WARM skips
+   * the reset and the PHY's 3.5 s (mega-net REQUIREMENTS.md 5.23). */
+  m65_net_hold();
   { unsigned char last = PEEK(0xd7fa), n = 0; while (n < 3) if (PEEK(0xd7fa) != last) { last = PEEK(0xd7fa); n++; } }
 
   for (attempt = 0; attempt < 3; attempt++) {
@@ -43,7 +47,7 @@ unsigned char net_up(const char **err)
   }
   if (attempt == 3) return 0;
   meganet_set_restore_map(0x00, 0xE0, 0x00, 0x00);   /* the trampoline just copied carries the KERNAL map: ours again */
-  meganet_call(MEGANET_INIT, 0, 0, 0, 0);
+  meganet_call(m65_net_init_entry(), 0, 0, 0, 0);
   for (attempt = 0; attempt < DHCP_ATTEMPTS; attempt++) {
     meganet_dhcp_start();
     frames = 0;

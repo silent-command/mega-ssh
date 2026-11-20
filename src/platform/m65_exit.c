@@ -30,6 +30,7 @@
  * will service them), and the keyboard queue is drained. */
 #include <string.h>
 #include "mega65/memory.h"
+#include "meganet.h"
 #include "m65_exit.h"
 
 #define STUB_AT 0x1fb0
@@ -43,6 +44,40 @@ static const unsigned char stub[] = {
   0xa9, 0x00, 0x8d, 0x6a, 0xd0,       /* $D06A = 0: the font's bank, after every other write */
   0x6c, 0xfc, 0xff                    /* jmp ($fffc): the KERNAL's reset entry */
 };
+
+/* The collection's handoff block, "MNC" at $FF87FF0 (mega-menu/src/handoff.h):
+ * its state byte (1-4), or 0 when there is no block. One copy and no
+ * inlining: three lpeeks inlined at each use cost Gemini 300 bytes. */
+static unsigned char hb[4];
+__attribute__((noinline)) static unsigned char handoff_state(void)
+{
+  lcopy(0xff87ff0UL, (unsigned long)hb, 4);
+  return hb[0] == 77 && hb[1] == 78 && hb[2] == 67 ? hb[3] : 0;
+}
+#define in_collection() (handoff_state() != 0)
+
+/* Launched by the collection's menu: its dispatcher sets RETURN (3) just
+ * before running a program. The program before left the ethernet
+ * controller running (below), so INIT_WARM can skip the controller reset
+ * and the PHY's 3.5 s (mega-net REQUIREMENTS.md 5.23). */
+unsigned char m65_launched_from_menu(void)
+{
+  return handoff_state() == 3;
+}
+
+/* For the network's start: hold the controller in reset as always, unless
+ * launched from the menu; and the INIT to call after. Functions, not
+ * inline tests: the bring-up is inlined into main, and a test there
+ * reshaped all of main (Gemini: 280 bytes). */
+__attribute__((noinline)) void m65_net_hold(void)
+{
+  if (handoff_state() != 3) POKE(0xd6e0, 0x00);
+}
+
+__attribute__((noinline)) unsigned int m65_net_init_entry(void)
+{
+  return handoff_state() == 3 ? MEGANET_INIT_WARM : MEGANET_INIT;
+}
 
 /* Black between programs (the Net-Tools collection, mega-menu/README.md).
  *
@@ -61,7 +96,7 @@ static const unsigned char stub[] = {
  * dispatcher nothing would put them back. */
 static void black_until_dispatch(void)
 {
-  if (lpeek(0xff87ff0UL) != 77 || lpeek(0xff87ff1UL) != 78 || lpeek(0xff87ff2UL) != 67) return;
+  if (!in_collection()) return;
   POKE(0xd070, 0xff);                                      /* show and write bank 3 */
   POKE(0xd106, 0); POKE(0xd206, 0); POKE(0xd306, 0);
   POKE(0xd070, 0x3f);                                      /* the ROM's writes: bank 0 */
@@ -70,7 +105,11 @@ static void black_until_dispatch(void)
 void m65_exit_to_basic(void)
 {
   unsigned char frames, last;
-  POKE(0xd6e0, 0x00);                              /* ethernet controller: held in reset */
+  /* The ethernet controller: held in reset, unless the collection's
+   * dispatcher runs next. Then it is left running, link and all, for the
+   * next program's INIT_WARM (mega-net 5.23); BASIC's own handler takes
+   * any event it raises meanwhile, as in a BASIC program (mega-net 5.18). */
+  if (!in_collection()) POKE(0xd6e0, 0x00);
   /* Settle for half a second, interrupts still on: an event the
    * controller had in flight is taken by the program's own handler, and
    * the key that asked for this is released. The ROM enters its
