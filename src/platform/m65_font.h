@@ -1,3 +1,5 @@
+/* Copyright 2026 Justin Cameron
+ * SPDX-License-Identifier: Apache-2.0 */
 /* The lowercase font in RAM, with the six glyphs ASCII has and the
  * machine's character set lacks drawn in: backslash, caret, backtick,
  * the braces and the tilde. The ROM's set is copied to $11000 (bank 1,

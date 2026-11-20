@@ -1,3 +1,5 @@
+/* Copyright 2026 Justin Cameron
+ * SPDX-License-Identifier: Apache-2.0 */
 /* 80-column screen setup, from the FTP client, which had it from the
  * gopher client. See REQUIREMENTS.md section 7 of the gopher client for
  * why each step in m65_screen_init exists: skipping any of them causes

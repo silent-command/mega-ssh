@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# Copyright 2026 Justin Cameron
+# SPDX-License-Identifier: Apache-2.0
 """A controllable SSH server for testing the MEGA65 client.
 
     build/venv/bin/python tools/ssh_test_server.py [port] [--shell]

@@ -1,3 +1,5 @@
+/* Copyright 2026 Justin Cameron
+ * SPDX-License-Identifier: Apache-2.0 */
 #include "dma.h"
 
 #define POKE(a, v) (*(volatile uint8_t *)(a) = (uint8_t)(v))

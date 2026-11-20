@@ -1,3 +1,5 @@
+/* Copyright 2026 Justin Cameron
+ * SPDX-License-Identifier: Apache-2.0 */
 /* X25519 and Ed25519 verification over GF(2^255-19).
  *
  * The algorithms are TweetNaCl's (public domain): the Montgomery ladder,

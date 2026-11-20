@@ -1,3 +1,5 @@
+/* Copyright 2026 Justin Cameron
+ * SPDX-License-Identifier: Apache-2.0 */
 /* The terminal's screen primitives: the five calls through which
  * everything in term.c reaches the cells. They live in the bank's main
  * region (LTO, with the DMA helpers) so the parser alone has to fit

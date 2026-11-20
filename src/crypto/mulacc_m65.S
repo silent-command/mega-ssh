@@ -1,3 +1,5 @@
+/* Copyright 2026 Justin Cameron
+ * SPDX-License-Identifier: Apache-2.0 */
 ; The multiply-accumulate loops that decide how long a handshake
 ; takes, and Poly1305's block, on the 45GS02's math unit: MULTINA at $D770-$D773, MULTINB at
 ; $D774-$D777, the 64-bit product from $D778. Compiled C spent about 780

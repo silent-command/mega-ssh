@@ -1,3 +1,5 @@
+/* Copyright 2026 Justin Cameron
+ * SPDX-License-Identifier: Apache-2.0 */
 /* The crypto suite: every primitive against its RFC's published vectors.
  * Host only. `python3 build.py test` builds and runs it. */
 #include <stdio.h>

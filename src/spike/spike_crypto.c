@@ -1,3 +1,5 @@
+/* Copyright 2026 Justin Cameron
+ * SPDX-License-Identifier: Apache-2.0 */
 /* Step 3: the primitives on the MEGA65, checked against the same vectors
  * the host suite uses, and timed on the frame counter. The go/no-go for
  * the project: X25519 and an Ed25519 verification must fit a handshake

@@ -1,3 +1,5 @@
+/* Copyright 2026 Justin Cameron
+ * SPDX-License-Identifier: Apache-2.0 */
 /* Probe: the Poly1305 block in assembly alone, on trivial inputs, and
  * the whole tag against the RFC vector. Its own spike: added to
  * spike_mul it moved the program enough that an earlier step crashed

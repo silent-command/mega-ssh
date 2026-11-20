@@ -1,3 +1,5 @@
+/* Copyright 2026 Justin Cameron
+ * SPDX-License-Identifier: Apache-2.0 */
 /* Step 1: connect to an SSH server, exchange the version strings, and
  * read the length of the server's first binary packet (its KEXINIT).
  * Proves the plumbing before any cryptography. REQUIREMENTS.md 5.1. */

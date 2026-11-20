@@ -1,3 +1,5 @@
+/* Copyright 2026 Justin Cameron
+ * SPDX-License-Identifier: Apache-2.0 */
 /* The crypto bank: a raw, headerless image in bank 1 at physical
  * $12000, executed with bank 1 mapped over CPU $2000-$BFFF (and its top
  * 8 KB, $1E000-$1FFFF, over $E000-$FFFF for the interrupt vectors in

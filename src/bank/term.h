@@ -1,3 +1,5 @@
+/* Copyright 2026 Justin Cameron
+ * SPDX-License-Identifier: Apache-2.0 */
 /* The terminal, in the bank: a VT100 (with the xterm additions programs
  * actually use) on the 80x25 cell screen at $10000, 25 or 50 rows, with
  * colours at $FF80000, both reached by DMA. The client hands it the

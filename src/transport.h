@@ -1,3 +1,5 @@
+/* Copyright 2026 Justin Cameron
+ * SPDX-License-Identifier: Apache-2.0 */
 /* The SSH transport (RFC 4253) and user authentication (RFC 4252) on
  * mega-net socket 0: version exchange, KEXINIT, curve25519-sha256, an
  * ssh-ed25519 host key checked against KNOWNHOSTS, NEWKEYS,

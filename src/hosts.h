@@ -1,3 +1,5 @@
+/* Copyright 2026 Justin Cameron
+ * SPDX-License-Identifier: Apache-2.0 */
 /* Known hosts: trust on first use. KNOWNHOSTS on the boot disk holds one
  * line per host, "host:port <64 hex digits of the Ed25519 public key>".
  * Loaded once at start; a host accepted at the prompt is appended and

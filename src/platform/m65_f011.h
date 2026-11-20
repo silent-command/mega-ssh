@@ -1,3 +1,5 @@
+/* Copyright 2026 Justin Cameron
+ * SPDX-License-Identifier: Apache-2.0 */
 /* Direct F011 floppy controller access.
  *
  * Exists because the KERNAL route does not work from this program: it

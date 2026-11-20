@@ -1,3 +1,5 @@
+/* Copyright 2026 Justin Cameron
+ * SPDX-License-Identifier: Apache-2.0 */
 /* Random bytes for the key exchange's private scalar, the KEXINIT cookie
  * and packet padding.
  *

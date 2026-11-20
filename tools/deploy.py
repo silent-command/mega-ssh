@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# Copyright 2026 Justin Cameron
+# SPDX-License-Identifier: Apache-2.0
 """Puts bin/SSH.D81 onto the MEGA65's SD card root, keeping what the client
 wrote on the disk already there: IDENTITY (the Ed25519 key that is the
 user's account on a key-authenticated server), SSHAUTH (the

@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# Copyright 2026 Justin Cameron
+# SPDX-License-Identifier: Apache-2.0
 """Compile every source for the MEGA65 without link-time merging and
 print each object's code and data size, largest first. For finding where
 the bytes go when the program does not fit."""

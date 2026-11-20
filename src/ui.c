@@ -1,3 +1,5 @@
+/* Copyright 2026 Justin Cameron
+ * SPDX-License-Identifier: Apache-2.0 */
 #include <string.h>
 #include "mega65/memory.h"
 #include "m65_screen.h"

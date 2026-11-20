@@ -1,3 +1,5 @@
+/* Copyright 2026 Justin Cameron
+ * SPDX-License-Identifier: Apache-2.0 */
 /* Glyphs: what one character becomes on this machine's screen. Shared
  * by the client (its prompts) and the bank (the terminal), so it is
  * compiled into both images. From the FTP client's screen module. */

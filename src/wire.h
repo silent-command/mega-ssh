@@ -1,3 +1,5 @@
+/* Copyright 2026 Justin Cameron
+ * SPDX-License-Identifier: Apache-2.0 */
 /* The SSH wire types (RFC 4251 5): byte, boolean, uint32, string, mpint,
  * name-list, written into and read out of a buffer with the bounds
  * checked on every access. A reader that runs off the end reports it

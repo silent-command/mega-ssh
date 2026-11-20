@@ -1,3 +1,5 @@
+/* Copyright 2026 Justin Cameron
+ * SPDX-License-Identifier: Apache-2.0 */
 /* The primitives an SSH 2 client needs for one algorithm of each kind:
  * curve25519-sha256, ssh-ed25519, chacha20-poly1305@openssh.com.
  *

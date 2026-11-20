@@ -1,3 +1,5 @@
+/* Copyright 2026 Justin Cameron
+ * SPDX-License-Identifier: Apache-2.0 */
 #include <stdint.h>
 #include "dma.h"
 #include "termscr.h"

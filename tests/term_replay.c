@@ -1,3 +1,5 @@
+/* Copyright 2026 Justin Cameron
+ * SPDX-License-Identifier: Apache-2.0 */
 /* Replays a captured byte stream through the terminal on the host and
  * prints the screen: what a program's output would look like on the
  * machine, without the machine. The capture is what tools/ssh_test_server.py

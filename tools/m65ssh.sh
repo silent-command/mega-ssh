@@ -1,3 +1,5 @@
+# Copyright 2026 Justin Cameron
+# SPDX-License-Identifier: Apache-2.0
 # The SSH client's hardware recipes, on mega-net's driver. Source it:
 #
 #   source tools/m65ssh.sh

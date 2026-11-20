@@ -1,3 +1,5 @@
+/* Copyright 2026 Justin Cameron
+ * SPDX-License-Identifier: Apache-2.0 */
 /* Random bytes from timing jitter, hashed. See rnd.c for what it is and
  * is not. */
 #ifndef RND_H

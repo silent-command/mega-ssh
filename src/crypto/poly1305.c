@@ -1,3 +1,5 @@
+/* Copyright 2026 Justin Cameron
+ * SPDX-License-Identifier: Apache-2.0 */
 /* Poly1305 in 32-bit limbs, the arrangement OpenSSL uses on 32-bit
  * machines (radix 2^32, h in five words, r in four): 20 products of
  * 32 x 32 bits per 16-byte block, which is what the MEGA65's math unit

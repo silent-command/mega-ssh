@@ -1,3 +1,5 @@
+/* Copyright 2026 Justin Cameron
+ * SPDX-License-Identifier: Apache-2.0 */
 /* Fixed-address working buffers in verified-free low RAM.
  *
  * The program's .bss has no room for these: with the disk layer wired in

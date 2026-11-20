@@ -1,3 +1,5 @@
+/* Copyright 2026 Justin Cameron
+ * SPDX-License-Identifier: Apache-2.0 */
 /* The cell screen: 80 columns of screen codes at $10000 (bank 1, below
  * the crypto image, where 50 rows fit: at $0800 they would run over the
  * trampolines at $1600), colours at $FF80000, written directly, so the

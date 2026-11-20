@@ -1,3 +1,5 @@
+/* Copyright 2026 Justin Cameron
+ * SPDX-License-Identifier: Apache-2.0 */
 /* The client's side of the crypto bank: the same operations as crypto.h,
  * marshalled through the trampoline at $1700 with parameter blocks the
  * bank reads by DMA. Hash and Poly1305 contexts and cipher keys live in

@@ -1,3 +1,5 @@
+/* Copyright 2026 Justin Cameron
+ * SPDX-License-Identifier: Apache-2.0 */
 /* The terminal against a screen made of two arrays: what each sequence
  * a real host sends must leave on the cells. Host only; `python3
  * build.py test` builds and runs it after the crypto suite. */

@@ -1,3 +1,5 @@
+/* Copyright 2026 Justin Cameron
+ * SPDX-License-Identifier: Apache-2.0 */
 /* Bookmarks: SSHMARKS on the disk the client booted from, the shape the
  * FTP client's FTPC.CFG has. A line "SSHM1", then four lines per entry:
  * host, port, the method (p or i), user. No passwords. The text stays in

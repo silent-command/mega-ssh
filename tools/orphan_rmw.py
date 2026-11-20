@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# Copyright 2026 Justin Cameron
+# SPDX-License-Identifier: Apache-2.0
 """Scans a linked ELF for the miscompile REQUIREMENTS.md 5.6 records: a
 16-bit inw/dew on a zero-page word that the same function never loads
 or stores otherwise, i.e. a counter the loop tests somewhere else.

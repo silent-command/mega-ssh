@@ -1,3 +1,5 @@
+/* Copyright 2026 Justin Cameron
+ * SPDX-License-Identifier: Apache-2.0 */
 /* Puts the machine back the way BASIC expects before main() returns:
  * ethernet controller quiet, keyboard queue empty, ROM map and VIC-IV hot
  * registers restored, screen editor re-initialised through the KERNAL.

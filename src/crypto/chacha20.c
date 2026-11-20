@@ -1,3 +1,5 @@
+/* Copyright 2026 Justin Cameron
+ * SPDX-License-Identifier: Apache-2.0 */
 #include "crypto.h"
 
 #define ROTL(x, n) (((x) << (n)) | ((x) >> (32 - (n))))

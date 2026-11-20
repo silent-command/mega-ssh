@@ -1,3 +1,5 @@
+/* Copyright 2026 Justin Cameron
+ * SPDX-License-Identifier: Apache-2.0 */
 /* Probe: the assembly multiply loop against a C reference, on the
  * machine, for known inputs; and the math unit's latency, read at
  * several delays after the operand write. REQUIREMENTS.md 5.3. */

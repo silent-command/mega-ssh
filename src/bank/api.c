@@ -1,3 +1,5 @@
+/* Copyright 2026 Justin Cameron
+ * SPDX-License-Identifier: Apache-2.0 */
 /* The crypto bank's entries: the C behind each jump in jumptable.S.
  *
  * Every entry reads a parameter block from the caller's memory by DMA

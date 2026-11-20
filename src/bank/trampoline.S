@@ -1,3 +1,5 @@
+/* Copyright 2026 Justin Cameron
+ * SPDX-License-Identifier: Apache-2.0 */
 ; The crypto bank's trampoline at $1700, the page after mega-net's: a
 ; mailbox and a call entry, the same shape as mega-net's trampoline at
 ; $1600 (its REQUIREMENTS.md 5.10, 5.11). The client pokes the entry

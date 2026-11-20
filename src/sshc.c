@@ -1,3 +1,5 @@
+/* Copyright 2026 Justin Cameron
+ * SPDX-License-Identifier: Apache-2.0 */
 /* MEGA65 SSH client: connect, exchange keys, check the host, log in
  * with a password, open a session with a pty and a shell, and run a
  * terminal on it. REQUIREMENTS.md 4. */

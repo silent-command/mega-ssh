@@ -1,3 +1,5 @@
+/* Copyright 2026 Justin Cameron
+ * SPDX-License-Identifier: Apache-2.0 */
 /* Bringing the link up and turning a host name into an address. */
 #ifndef NETUTIL_H
 #define NETUTIL_H

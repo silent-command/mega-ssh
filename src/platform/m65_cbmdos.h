@@ -1,3 +1,5 @@
+/* Copyright 2026 Justin Cameron
+ * SPDX-License-Identifier: Apache-2.0 */
 /* Minimal CBM DOS writer for 1581 / .d81 images, on top of m65_f011.c.
  *
  * Streaming, because an article can reach ~316KB and cannot be buffered:

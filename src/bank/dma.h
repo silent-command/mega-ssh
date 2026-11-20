@@ -1,3 +1,5 @@
+/* Copyright 2026 Justin Cameron
+ * SPDX-License-Identifier: Apache-2.0 */
 /* DMAgic copy between 28-bit addresses, for the bank: the caller's
  * memory is hidden while the bank is mapped, so every byte in or out
  * moves this way. mega-net's mn_dma.c, with this bank's base. */

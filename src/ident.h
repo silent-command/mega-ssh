@@ -1,3 +1,5 @@
+/* Copyright 2026 Justin Cameron
+ * SPDX-License-Identifier: Apache-2.0 */
 /* The client's identity for public-key authentication: an Ed25519 seed
  * and its public key, 64 bytes in IDENTITY on the boot disk, made on the
  * machine from the client's own randomness. The default authentication

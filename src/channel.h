@@ -1,3 +1,5 @@
+/* Copyright 2026 Justin Cameron
+ * SPDX-License-Identifier: Apache-2.0 */
 /* The connection protocol (RFC 4254), one session channel: open,
  * pty-req, shell, data both ways with window accounting, EOF, close.
  * Bytes from the server go to ch_on_data as they arrive. */

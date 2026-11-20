@@ -1,3 +1,5 @@
+/* Copyright 2026 Justin Cameron
+ * SPDX-License-Identifier: Apache-2.0 */
 /* Puts mega-net's image and its far-call trampoline into memory at
  * startup. Both must live at fixed physical addresses before any
  * meganet_call(): the trampoline at $1600, the page mega-net reserves

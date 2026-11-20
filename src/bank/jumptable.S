@@ -1,3 +1,5 @@
+/* Copyright 2026 Justin Cameron
+ * SPDX-License-Identifier: Apache-2.0 */
 ; The crypto bank's jump table and entry prologue: mega-net's shape
 ; (its src/abi/jumptable.S), with the bank's own zero page $70-$FF
 ; swapped in on entry and the caller's back on exit, and the bank's
